@@ -56,11 +56,15 @@ CREATE TABLE spaceships (
 
     manufacturer VARCHAR(100),
 
+    cost_in_credits BIGINT,
+
     capacity INT NOT NULL,
 
     daily_price NUMERIC(10,2) NOT NULL,
 
     status_id INT NOT NULL REFERENCES spaceship_status(id),
+
+    active BOOLEAN NOT NULL DEFAULT TRUE,
 
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -101,3 +105,10 @@ CREATE TABLE payments (
 
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- ===== Seed Data =====
+INSERT INTO spaceship_status (name) VALUES ('disponivel'), ('alugada'), ('manutencao');
+INSERT INTO rental_status (name) VALUES ('ativa'), ('concluida'), ('cancelada');
+INSERT INTO roles (name) VALUES ('admin'), ('cliente');
+INSERT INTO payment_status (name) VALUES ('pendente'), ('pago'), ('cancelado');
+INSERT INTO payment_methods (name) VALUES ('credito'), ('debito'), ('pix');
