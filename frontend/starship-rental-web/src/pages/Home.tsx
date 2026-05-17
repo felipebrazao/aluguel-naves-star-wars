@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import SpaceshipCard from '../components/SpaceshipCard'
+import PageHeader from '../components/shared/PageHeader'
 
 const ships = [
     {
@@ -45,14 +46,12 @@ function Home() {
 
     return (
         <section className="space-y-8">
-            <div className="rounded-3xl border border-panel-border bg-gradient-to-br from-panel-dark to-black p-8 shadow-[0_0_40px_rgba(0,229,255,0.08)]">
-                <p className="text-xs uppercase tracking-[0.4em] text-rebel-blue">Catálogo de Naves</p>
-                <h2 className="mt-3 text-3xl font-semibold text-sw-yellow sm:text-4xl">Encontre sua próxima rota pelo hiperespaço</h2>
-                <p className="mt-4 max-w-3xl text-sm leading-6 text-gray-300">
-                    Navegue pelas opções disponíveis, filtre por nome ou modelo e prepare o checkout da sua
-                    missão.
-                </p>
-
+            <PageHeader
+                isHero
+                overline="Catálogo de Naves"
+                title="Encontre sua próxima rota pelo hiperespaço"
+                description="Navegue pelas opções disponíveis, filtre por nome ou modelo e prepare o checkout da sua missão."
+            >
                 <div className="mt-6 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
                     <label className="flex items-center gap-3 rounded-2xl border border-panel-border bg-black/30 px-4 py-3">
                         <span className="text-rebel-blue">Busca</span>
@@ -74,7 +73,7 @@ function Home() {
                         />
                     </label>
                 </div>
-            </div>
+            </PageHeader>
 
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {filteredShips.map((ship) => (

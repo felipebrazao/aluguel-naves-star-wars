@@ -1,4 +1,5 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import PilledButton from './PilledButton'
 
 const navItems = [
   { to: '/', label: 'Catálogo' },
@@ -7,6 +8,18 @@ const navItems = [
 ]
 
 function Layout() {
+  const location = useLocation()
+
+  const isItemActive = (path: string) =>
+    path === '/' ? location.pathname === '/' : location.pathname === path || location.pathname.startsWith(`${path}/`)
+
+  const getNavVariant = (path: string) => {
+    if (path === '/admin') return 'danger'
+    if (path === '/meus-alugueis') return 'secondary'
+
+    return 'primary'
+  }
+
   return (
     <div className="min-h-screen bg-space-black text-gray-100">
       <header className="border-b border-panel-border bg-panel-dark/95 backdrop-blur-sm">
@@ -18,20 +31,15 @@ function Layout() {
 
           <nav className="flex flex-wrap items-center gap-2 text-sm font-medium">
             {navItems.map((item) => (
-              <NavLink
+              <PilledButton
                 key={item.to}
+                as={NavLink}
                 to={item.to}
-                className={({ isActive }: { isActive: boolean }) =>
-                  [
-                    'rounded-full border px-4 py-2 transition-all duration-200',
-                    isActive
-                      ? 'border-sw-yellow bg-sw-yellow/10 text-sw-yellow shadow-[0_0_18px_rgba(255,232,31,0.18)]'
-                      : 'border-panel-border bg-black/20 text-gray-300 hover:border-rebel-blue hover:text-rebel-blue',
-                  ].join(' ')
-                }
+                variant={getNavVariant(item.to)}
+                active={isItemActive(item.to)}
               >
                 {item.label}
-              </NavLink>
+              </PilledButton>
             ))}
           </nav>
         </div>

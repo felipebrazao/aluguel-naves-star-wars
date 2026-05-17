@@ -1,8 +1,8 @@
 import { Navigate } from 'react-router-dom'
 
 type ProtectedRouteProps = {
-  children: React.ReactNode
-  role?: 'Admin' | 'Cliente'
+  readonly children: React.ReactNode
+  readonly role?: 'Admin' | 'Cliente'
 }
 
 const mockSession = {
