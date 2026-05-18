@@ -28,7 +28,7 @@ CREATE TABLE payment_methods (
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
 
-    swapi_id INT NOT NULL UNIQUE,
+    swapi_id INT UNIQUE,
 
     name VARCHAR(100) NOT NULL,
 
@@ -98,11 +98,17 @@ CREATE TABLE rentals (
 
     status_id INT NOT NULL REFERENCES rental_status(id),
 
+    pickup_planet_id INT NOT NULL REFERENCES planets(id),
+
+    return_planet_id INT NOT NULL REFERENCES planets(id),
+
     start_date TIMESTAMP NOT NULL,
 
     end_date TIMESTAMP NOT NULL,
 
     actual_pickup_date TIMESTAMP,
+
+    actual_return_date TIMESTAMP,
 
     total_price NUMERIC(10,2) NOT NULL,
 

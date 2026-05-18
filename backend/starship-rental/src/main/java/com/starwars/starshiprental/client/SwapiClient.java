@@ -1,5 +1,6 @@
 package com.starwars.starshiprental.client;
 
+import com.starwars.starshiprental.dto.SwapiPersonDTO;
 import com.starwars.starshiprental.dto.SwapiPlanetDTO;
 import com.starwars.starshiprental.dto.SwapiStarshipDTO;
 import org.springframework.core.ParameterizedTypeReference;
@@ -14,6 +15,7 @@ public class SwapiClient {
 
     private static final String STARSHIPS_URL = "https://swapi.info/api/starships/";
     private static final String PLANETS_URL = "https://swapi.info/api/planets/";
+    private static final String PEOPLE_URL = "https://swapi.info/api/people/";
 
     private final RestTemplate restTemplate;
 
@@ -36,6 +38,15 @@ public class SwapiClient {
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<List<SwapiPlanetDTO>>() {}
+        ).getBody();
+    }
+
+    public List<SwapiPersonDTO> fetchAllPeople() {
+        return restTemplate.exchange(
+                PEOPLE_URL,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<SwapiPersonDTO>>() {}
         ).getBody();
     }
 }
