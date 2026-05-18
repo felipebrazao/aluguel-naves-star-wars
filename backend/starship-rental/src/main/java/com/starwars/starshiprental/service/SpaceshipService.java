@@ -25,7 +25,7 @@ public class SpaceshipService {
         this.statusRepository = statusRepository;
     }
 
-    public SpaceshipResponseDTO criar(SpaceshipRequestDTO dto) {
+    public SpaceshipResponseDTO create(SpaceshipRequestDTO dto) {
         SpaceshipStatus status = statusRepository.findByName("disponivel")
                 .orElseThrow(() -> new IllegalStateException("Status 'disponivel' não encontrado"));
 
@@ -35,13 +35,13 @@ public class SpaceshipService {
         spaceship.setManufacturer(dto.getManufacturer());
         spaceship.setCapacity(dto.getCapacity());
         spaceship.setCostInCredits(dto.getCostInCredits());
-        spaceship.setDailyPrice(calcularDailyPrice(dto.getCostInCredits()));
+        spaceship.setDailyPrice(calculateDailyPrice(dto.getCostInCredits()));
         spaceship.setStatus(status);
 
         return new SpaceshipResponseDTO(spaceshipRepository.save(spaceship));
     }
 
-    public BigDecimal calcularDailyPrice(Long costInCredits) {
+    public BigDecimal calculateDailyPrice(Long costInCredits) {
         if (costInCredits == null || costInCredits <= 0) {
             return PISO;
         }
@@ -49,7 +49,7 @@ public class SpaceshipService {
         return base.min(TETO).max(PISO);
     }
 
-    public List<SpaceshipResponseDTO> listar(Boolean active) {
+    public List<SpaceshipResponseDTO> findAll(Boolean active) {
         List<Spaceship> naves = (active != null)
                 ? spaceshipRepository.findAllByActive(active)
                 : spaceshipRepository.findAll();
@@ -59,10 +59,24 @@ public class SpaceshipService {
                 .toList();
     }
 
-    public SpaceshipResponseDTO buscarPorId(Integer id) {
+    public SpaceshipResponseDTO findById(Integer id) {
         Spaceship spaceship = spaceshipRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Nave não encontrada com id: " + id));
         return new SpaceshipResponseDTO(spaceship);
+    }
+
+    public SpaceshipResponseDTO update(Integer id, SpaceshipRequestDTO dto) {
+        Spaceship spaceship = spaceshipRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Nave não encontrada com id: " + id));
+
+        spaceship.setName(dto.getName());
+        spaceship.setModel(dto.getModel());
+        spaceship.setManufacturer(dto.getManufacturer());
+        spaceship.setCapacity(dto.getCapacity());
+        spaceship.setCostInCredits(dto.getCostInCredits());
+        spaceship.setDailyPrice(calculateDailyPrice(dto.getCostInCredits()));
+
+        return new SpaceshipResponseDTO(spaceshipRepository.save(spaceship));
     }
 
     public Spaceship toggleActive(Integer id) {

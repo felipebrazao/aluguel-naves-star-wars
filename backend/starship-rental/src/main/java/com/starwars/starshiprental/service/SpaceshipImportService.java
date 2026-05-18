@@ -30,46 +30,46 @@ public class SpaceshipImportService {
         this.spaceshipService = spaceshipService;
     }
 
-    public int importarNaves() {
+    public int importSpaceships() {
         SpaceshipStatus status = statusRepository.findByName(DEFAULT_STATUS)
                 .orElseThrow(() -> new IllegalStateException(
                         "Status '" + DEFAULT_STATUS + "' não encontrado na tabela spaceship_status"));
 
-        List<SwapiStarshipDTO> naves = swapiClient.fetchAllStarships();
+        List<SwapiStarshipDTO> starships = swapiClient.fetchAllStarships();
 
-        for (SwapiStarshipDTO dto : naves) {
-            salvarOuAtualizar(dto, status);
+        for (SwapiStarshipDTO dto : starships) {
+            saveOrUpdate(dto, status);
         }
 
-        return naves.size();
+        return starships.size();
     }
 
-    private void salvarOuAtualizar(SwapiStarshipDTO dto, SpaceshipStatus status) {
-        Integer swapiId = extrairSwapiId(dto.getUrl());
+    private void saveOrUpdate(SwapiStarshipDTO dto, SpaceshipStatus status) {
+        Integer swapiId = extractSwapiId(dto.getUrl());
 
         Spaceship spaceship = spaceshipRepository.findBySwapiId(swapiId)
                 .orElse(new Spaceship());
 
-        Long costInCredits = parsarCreditos(dto.getCostInCredits());
+        Long costInCredits = parseCredits(dto.getCostInCredits());
 
         spaceship.setSwapiId(swapiId);
         spaceship.setName(dto.getName());
         spaceship.setModel(dto.getModel());
         spaceship.setManufacturer(dto.getManufacturer());
-        spaceship.setCapacity(parsarPassageiros(dto.getPassengers()));
+        spaceship.setCapacity(parsePassengers(dto.getPassengers()));
         spaceship.setCostInCredits(costInCredits);
-        spaceship.setDailyPrice(spaceshipService.calcularDailyPrice(costInCredits));
+        spaceship.setDailyPrice(spaceshipService.calculateDailyPrice(costInCredits));
         spaceship.setStatus(status);
 
         spaceshipRepository.save(spaceship);
     }
 
-    private Integer extrairSwapiId(String url) {
+    private Integer extractSwapiId(String url) {
         String[] parts = url.split("/");
         return Integer.parseInt(parts[parts.length - 1]);
     }
 
-    private Integer parsarPassageiros(String passengers) {
+    private Integer parsePassengers(String passengers) {
         try {
             return Integer.parseInt(passengers.replace(",", "").trim());
         } catch (NumberFormatException e) {
@@ -77,7 +77,7 @@ public class SpaceshipImportService {
         }
     }
 
-    private Long parsarCreditos(String costInCredits) {
+    private Long parseCredits(String costInCredits) {
         try {
             return Long.parseLong(costInCredits.replace(",", "").trim());
         } catch (NumberFormatException | NullPointerException e) {

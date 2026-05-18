@@ -26,8 +26,8 @@ public class SpaceshipController {
     }
 
     @PostMapping("/import")
-    public ResponseEntity<Map<String, Object>> importarNaves() {
-        int total = importService.importarNaves();
+    public ResponseEntity<Map<String, Object>> importSpaceships() {
+        int total = importService.importSpaceships();
         return ResponseEntity.ok(Map.of(
                 "mensagem", "Importação concluída com sucesso!",
                 "totalNaves", total
@@ -35,19 +35,25 @@ public class SpaceshipController {
     }
 
     @PostMapping
-    public ResponseEntity<SpaceshipResponseDTO> criar(@Validated @RequestBody SpaceshipRequestDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(spaceshipService.criar(dto));
+    public ResponseEntity<SpaceshipResponseDTO> create(@Validated @RequestBody SpaceshipRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(spaceshipService.create(dto));
     }
 
     @GetMapping
-    public ResponseEntity<List<SpaceshipResponseDTO>> listar(
+    public ResponseEntity<List<SpaceshipResponseDTO>> findAll(
             @RequestParam(required = false) Boolean active) {
-        return ResponseEntity.ok(spaceshipService.listar(active));
+        return ResponseEntity.ok(spaceshipService.findAll(active));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SpaceshipResponseDTO> buscarPorId(@PathVariable Integer id) {
-        return ResponseEntity.ok(spaceshipService.buscarPorId(id));
+    public ResponseEntity<SpaceshipResponseDTO> findById(@PathVariable Integer id) {
+        return ResponseEntity.ok(spaceshipService.findById(id));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<SpaceshipResponseDTO> update(@PathVariable Integer id,
+                                                       @Validated @RequestBody SpaceshipRequestDTO dto) {
+        return ResponseEntity.ok(spaceshipService.update(id, dto));
     }
 
     @PatchMapping("/{id}/active")

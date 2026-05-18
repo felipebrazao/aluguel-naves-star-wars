@@ -45,6 +45,26 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE planets (
+    id SERIAL PRIMARY KEY,
+
+    swapi_id INT UNIQUE,
+
+    name VARCHAR(100) NOT NULL,
+
+    diameter INT,
+
+    climate VARCHAR(100),
+
+    terrain VARCHAR(100),
+
+    population BIGINT,
+
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE spaceships (
     id SERIAL PRIMARY KEY,
 
