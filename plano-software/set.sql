@@ -28,7 +28,7 @@ CREATE TABLE payment_methods (
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
 
-    swapi_id INT NOT NULL UNIQUE,
+    swapi_id INT UNIQUE,
 
     name VARCHAR(100) NOT NULL,
 
@@ -45,6 +45,26 @@ CREATE TABLE users (
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE planets (
+    id SERIAL PRIMARY KEY,
+
+    swapi_id INT UNIQUE,
+
+    name VARCHAR(100) NOT NULL,
+
+    diameter INT,
+
+    climate VARCHAR(100),
+
+    terrain VARCHAR(100),
+
+    population BIGINT,
+
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+
+    created_at TIMESTAMP DEFAULT NOW()
+);
+
 CREATE TABLE spaceships (
     id SERIAL PRIMARY KEY,
 
@@ -56,11 +76,15 @@ CREATE TABLE spaceships (
 
     manufacturer VARCHAR(100),
 
+    cost_in_credits BIGINT,
+
     capacity INT NOT NULL,
 
     daily_price NUMERIC(10,2) NOT NULL,
 
     status_id INT NOT NULL REFERENCES spaceship_status(id),
+
+    active BOOLEAN NOT NULL DEFAULT TRUE,
 
     created_at TIMESTAMP DEFAULT NOW()
 );
@@ -74,11 +98,17 @@ CREATE TABLE rentals (
 
     status_id INT NOT NULL REFERENCES rental_status(id),
 
+    pickup_planet_id INT NOT NULL REFERENCES planets(id),
+
+    return_planet_id INT NOT NULL REFERENCES planets(id),
+
     start_date TIMESTAMP NOT NULL,
 
     end_date TIMESTAMP NOT NULL,
 
     actual_pickup_date TIMESTAMP,
+
+    actual_return_date TIMESTAMP,
 
     total_price NUMERIC(10,2) NOT NULL,
 
@@ -101,3 +131,10 @@ CREATE TABLE payments (
 
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+-- ===== Seed Data =====
+INSERT INTO spaceship_status (name) VALUES ('disponivel'), ('alugada'), ('manutencao');
+INSERT INTO rental_status (name) VALUES ('ativa'), ('concluida'), ('cancelada');
+INSERT INTO roles (name) VALUES ('admin'), ('cliente');
+INSERT INTO payment_status (name) VALUES ('pendente'), ('pago'), ('cancelado');
+INSERT INTO payment_methods (name) VALUES ('credito'), ('debito'), ('pix');
