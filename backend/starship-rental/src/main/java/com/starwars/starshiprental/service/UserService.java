@@ -7,8 +7,12 @@ import com.starwars.starshiprental.entity.User;
 import com.starwars.starshiprental.repository.RoleRepository;
 import com.starwars.starshiprental.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+import static org.springframework.http.HttpStatus.CONFLICT;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserService {
@@ -24,6 +28,11 @@ public class UserService {
     public UserResponseDTO create(UserRequestDTO dto) {
         Role role = roleRepository.findById(dto.getRoleId())
                 .orElseThrow(() -> new IllegalArgumentException("Role não encontrada com id: " + dto.getRoleId()));
+
+        userRepository.findByEmail(dto.getEmail())
+                .ifPresent(existingUser -> {
+                    throw new ResponseStatusException(CONFLICT, "Já existe usuário cadastrado com esse email");
+                });
 
         User user = new User();
         user.setName(dto.getName());
@@ -56,6 +65,12 @@ public class UserService {
         Role role = roleRepository.findById(dto.getRoleId())
                 .orElseThrow(() -> new IllegalArgumentException("Role não encontrada com id: " + dto.getRoleId()));
 
+        userRepository.findByEmail(dto.getEmail())
+            .filter(existingUser -> !existingUser.getId().equals(id))
+            .ifPresent(existingUser -> {
+                throw new ResponseStatusException(CONFLICT, "Já existe usuário cadastrado com esse email");
+            });
+
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setCpf(dto.getCpf());
@@ -71,6 +86,10 @@ public class UserService {
                 .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com id: " + id));
         user.setActive(!user.getActive());
         return userRepository.save(user);
+    }
+
+    public Optional<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
     }
 }
 
