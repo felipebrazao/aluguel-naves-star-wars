@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useId } from 'react'
 import type { ReactNode } from 'react'
 
 export interface ModalProps {
@@ -9,52 +9,66 @@ export interface ModalProps {
 }
 
 function Modal({ isOpen, onClose, title, children }: Readonly<ModalProps>) {
-    const dialogRef = useRef<HTMLDialogElement>(null)
+    const titleId = useId()
 
     useEffect(() => {
-        const dialog = dialogRef.current
-
-        if (!dialog) return
-
-        if (isOpen && !dialog.open) {
-            dialog.showModal()
+        if (!isOpen) {
+            return undefined
         }
 
-        if (!isOpen && dialog.open) {
-            dialog.close()
+        const originalOverflow = document.body.style.overflow
+
+        document.body.style.overflow = 'hidden'
+
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                onClose()
+            }
         }
-    }, [isOpen])
+
+        globalThis.addEventListener('keydown', handleKeyDown)
+
+        return () => {
+            document.body.style.overflow = originalOverflow
+            globalThis.removeEventListener('keydown', handleKeyDown)
+        }
+    }, [isOpen, onClose])
+
+    if (!isOpen) {
+        return null
+    }
 
     return (
-        <dialog
-            ref={dialogRef}
-            className="modal"
-            onCancel={(event) => {
-                event.preventDefault()
-                onClose()
-            }}
-            onClick={(event) => {
-                if (event.target === event.currentTarget) {
-                    onClose()
-                }
-            }}
-        >
-            <div className="modal-box border border-panel-border bg-panel-dark text-gray-200">
-                <div className="flex items-start justify-between gap-4">
-                    <h3 className="text-2xl font-semibold text-sw-yellow">{title}</h3>
-                    <button
-                        type="button"
-                        aria-label="Fechar modal"
-                        className="rounded-full border border-panel-border px-3 py-1 text-sm text-gray-300 transition-colors hover:border-sw-yellow hover:text-sw-yellow"
-                        onClick={onClose}
-                    >
-                        ×
-                    </button>
-                </div>
+        <>
+            <button
+                type="button"
+                aria-label="Fechar modal"
+                className="absolute inset-0 bg-black/75 backdrop-blur-sm"
+                onClick={onClose}
+            />
 
-                <div className="mt-6">{children}</div>
-            </div>
-        </dialog>
+            <dialog
+                open
+                aria-labelledby={titleId}
+                className="fixed inset-0 z-50 m-0 flex max-h-none max-w-none items-center justify-center border-0 bg-transparent p-4"
+            >
+                <div className="w-full max-w-2xl rounded-3xl border border-panel-border bg-panel-dark p-6 text-gray-200 shadow-2xl">
+                    <div className="flex items-start justify-between gap-4">
+                        <h3 id={titleId} className="text-2xl font-semibold text-sw-yellow">{title}</h3>
+                        <button
+                            type="button"
+                            aria-label="Fechar modal"
+                            className="rounded-full border border-panel-border px-3 py-1 text-sm text-gray-300 transition-colors hover:border-sw-yellow hover:text-sw-yellow"
+                            onClick={onClose}
+                        >
+                            ×
+                        </button>
+                    </div>
+
+                    <div className="mt-6">{children}</div>
+                </div>
+            </dialog>
+        </>
     )
 }
 
