@@ -5,6 +5,8 @@ node_modules/
 dist/
 build/
 dist-ssr/
+coverage/
+*.tsbuildinfo
 
 # Logs
 npm-debug.log*
