@@ -14,15 +14,15 @@ const variantClasses: Record<PilledButtonVariant, string> = {
     primary:
         'border-sw-yellow text-sw-yellow bg-transparent hover:bg-sw-yellow hover:text-space-black hover:shadow-[0_0_18px_rgba(255,232,31,0.45)]',
     secondary:
-        'border-rebel-blue text-rebel-blue bg-transparent hover:bg-rebel-blue hover:text-space-black hover:shadow-[0_0_18px_rgba(0,229,255,0.45)]',
+        'border-jedi-blue text-jedi-blue bg-transparent hover:bg-jedi-blue hover:text-space-black hover:shadow-[0_0_18px_rgba(46,103,248,0.45)]',
     danger:
-        'border-empire-red text-empire-red bg-transparent hover:bg-empire-red hover:text-space-black hover:shadow-[0_0_18px_rgba(255,51,51,0.45)]',
+        'border-sith-red text-sith-red bg-transparent hover:bg-sith-red hover:text-space-black hover:shadow-[0_0_18px_rgba(235,33,46,0.45)]',
 }
 
 const activeClasses: Record<PilledButtonVariant, string> = {
     primary: 'bg-sw-yellow/10 shadow-[0_0_18px_rgba(255,232,31,0.18)]',
-    secondary: 'bg-rebel-blue/10 shadow-[0_0_18px_rgba(0,229,255,0.18)]',
-    danger: 'bg-empire-red/10 shadow-[0_0_18px_rgba(255,51,51,0.18)]',
+    secondary: 'bg-jedi-blue/10 shadow-[0_0_18px_rgba(46,103,248,0.18)]',
+    danger: 'bg-sith-red/10 shadow-[0_0_18px_rgba(235,33,46,0.18)]',
 }
 
 function PilledButton({

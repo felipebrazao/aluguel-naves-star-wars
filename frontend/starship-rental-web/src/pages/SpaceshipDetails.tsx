@@ -40,29 +40,29 @@ function SpaceshipDetails() {
                 <article className="md:col-span-2 rounded-3xl border border-panel-border bg-panel-dark p-8 shadow-[0_0_24px_rgba(0,0,0,0.35)]">
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <p className="text-xs uppercase tracking-[0.35em] text-rebel-blue">Ficha Técnica</p>
+                            <p className="text-xs uppercase tracking-[0.35em] text-jedi-blue">Ficha Técnica</p>
                             <h3 className="mt-3 text-2xl font-semibold text-sw-yellow">Visão geral da nave</h3>
                         </div>
 
-                        <span className="rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-400">
+                        <span className="rounded-full border border-jedi-green/40 bg-jedi-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-jedi-green">
                             {spaceship.status}
                         </span>
                     </div>
 
-                    <div className="mt-8 rounded-2xl border border-panel-border/80 bg-black/30 p-6">
+                    <div className="mt-8 rounded-2xl border border-panel-border/80 bg-surface-light/30 p-6">
                         <div className="grid gap-6 sm:grid-cols-2">
                             <div>
-                                <p className="text-xs uppercase tracking-[0.3em] text-rebel-blue">Fabricante</p>
+                                <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue">Fabricante</p>
                                 <p className="mt-2 text-lg font-semibold text-gray-100">{spaceship.manufacturer}</p>
                             </div>
 
                             <div>
-                                <p className="text-xs uppercase tracking-[0.3em] text-rebel-blue">Capacidade</p>
+                                <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue">Capacidade</p>
                                 <p className="mt-2 text-lg font-semibold text-gray-100">{spaceship.capacity} tripulante</p>
                             </div>
 
                             <div className="sm:col-span-2">
-                                <p className="text-xs uppercase tracking-[0.3em] text-rebel-blue">Preço da Diária</p>
+                                <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue">Preço da Diária</p>
                                 <p className="mt-2 text-3xl font-semibold text-sw-yellow">R$ {spaceship.dailyPrice.toFixed(2)}</p>
                             </div>
                         </div>
@@ -71,7 +71,7 @@ function SpaceshipDetails() {
 
                 <article className="md:col-span-1 rounded-3xl border border-panel-border bg-panel-dark p-8 shadow-[0_0_24px_rgba(0,0,0,0.35)]">
                     <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-rebel-blue">Checkout</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-jedi-blue">Checkout</p>
                         <h3 className="mt-3 text-2xl font-semibold text-sw-yellow">Consola de Reserva</h3>
                         <p className="mt-4 text-sm leading-6 text-gray-300">
                             Defina as datas e as localidades para calcular o valor total do aluguel.
@@ -81,12 +81,12 @@ function SpaceshipDetails() {
                     <form className="mt-8 space-y-5" onSubmit={(event) => event.preventDefault()}>
                         <div className="form-control">
                             <label htmlFor="startDate" className="label">
-                                <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">Data de Início</span>
+                                <span className="label-text text-xs uppercase tracking-[0.25em] text-jedi-blue">Data de Início</span>
                             </label>
                             <input
                                 id="startDate"
                                 type="date"
-                                className="input input-bordered w-full bg-black/30 text-gray-100 placeholder:text-gray-500"
+                                className="input input-bordered w-full bg-surface-light/30 text-gray-100 placeholder:text-gray-500"
                                 value={startDate}
                                 onChange={(event) => setStartDate(event.target.value)}
                             />
@@ -94,12 +94,12 @@ function SpaceshipDetails() {
 
                         <div className="form-control">
                             <label htmlFor="endDate" className="label">
-                                <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">Data de Fim</span>
+                                <span className="label-text text-xs uppercase tracking-[0.25em] text-jedi-blue">Data de Fim</span>
                             </label>
                             <input
                                 id="endDate"
                                 type="date"
-                                className="input input-bordered w-full bg-black/30 text-gray-100 placeholder:text-gray-500"
+                                className="input input-bordered w-full bg-surface-light/30 text-gray-100 placeholder:text-gray-500"
                                 value={endDate}
                                 onChange={(event) => setEndDate(event.target.value)}
                             />
@@ -107,11 +107,11 @@ function SpaceshipDetails() {
 
                         <div className="form-control">
                             <label htmlFor="pickupLocation" className="label">
-                                <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">Local de Recolha</span>
+                                <span className="label-text text-xs uppercase tracking-[0.25em] text-jedi-blue">Local de Recolha</span>
                             </label>
                             <select
                                 id="pickupLocation"
-                                className="select select-bordered w-full bg-black/30 text-gray-100"
+                                className="select select-bordered w-full bg-surface-light/30 text-gray-100"
                                 value={pickupLocation}
                                 onChange={(event) => setPickupLocation(event.target.value)}
                             >
@@ -126,11 +126,11 @@ function SpaceshipDetails() {
 
                         <div className="form-control">
                             <label htmlFor="dropoffLocation" className="label">
-                                <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">Local de Devolução</span>
+                                <span className="label-text text-xs uppercase tracking-[0.25em] text-jedi-blue">Local de Devolução</span>
                             </label>
                             <select
                                 id="dropoffLocation"
-                                className="select select-bordered w-full bg-black/30 text-gray-100"
+                                className="select select-bordered w-full bg-surface-light/30 text-gray-100"
                                 value={dropoffLocation}
                                 onChange={(event) => setDropoffLocation(event.target.value)}
                             >
@@ -145,8 +145,8 @@ function SpaceshipDetails() {
 
                         <div className="divider border-panel-border text-gray-500" />
 
-                        <div className="rounded-2xl border border-panel-border bg-black/30 p-4">
-                            <p className="text-xs uppercase tracking-[0.3em] text-rebel-blue">Valor Total</p>
+                        <div className="rounded-2xl border border-panel-border bg-surface-light/30 p-4">
+                            <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue">Valor Total</p>
                             <p className="mt-2 text-3xl font-semibold text-sw-yellow">R$ {totalPrice.toFixed(2)}</p>
                             <p className="mt-2 text-sm text-gray-400">{totalDays > 0 ? `${totalDays} dia(s) de aluguel` : 'Selecione as datas para calcular'}</p>
                         </div>

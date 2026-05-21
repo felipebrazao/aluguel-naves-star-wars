@@ -30,12 +30,12 @@ function DataTable<T>({ columns, data, emptyMessage = 'Nenhum registro encontrad
     }
 
     return (
-        <div className="overflow-x-auto rounded-2xl border border-panel-border bg-black/30">
+        <div className="overflow-x-auto rounded-2xl border border-panel-border bg-surface-light/30">
             <table className="table w-full">
-                <thead className="border-b border-panel-border text-rebel-blue">
+                <thead className="border-b border-panel-border text-jedi-blue">
                     <tr className="text-xs uppercase tracking-[0.3em]">
                         {columns.map((column) => (
-                            <th key={column.header} className="bg-transparent px-6 py-4 text-left font-semibold text-rebel-blue">
+                            <th key={column.header} className="bg-transparent px-6 py-4 text-left font-semibold text-jedi-blue">
                                 {column.header}
                             </th>
                         ))}

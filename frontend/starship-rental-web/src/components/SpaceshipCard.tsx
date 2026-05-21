@@ -7,14 +7,15 @@ export type SpaceshipCardProps = {
   model: string
   dailyPrice: number
   capacity: number
-  status: 'DISPONIVEL' | 'MANUTENCAO'
+  status: 'DISPONIVEL' | 'MANUTENCAO' | 'DESATIVADA'
 }
 
 function SpaceshipCard({ id, name, model, dailyPrice, capacity, status }: Readonly<SpaceshipCardProps>) {
-  const statusStyles =
-    status === 'DISPONIVEL'
-      ? 'border-rebel-blue/40 bg-rebel-blue/10 text-rebel-blue'
-      : 'border-empire-red/40 bg-empire-red/10 text-empire-red'
+  const statusStyles: Record<SpaceshipCardProps['status'], string> = {
+    DISPONIVEL: 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green',
+    MANUTENCAO: 'border-windu-purple/40 bg-windu-purple/10 text-windu-purple',
+    DESATIVADA: 'border-sith-red/40 bg-sith-red/10 text-sith-red',
+  }
 
   return (
     <article className="flex h-full min-h-[320px] flex-col rounded-2xl border border-panel-border bg-panel-dark p-5 shadow-[0_0_24px_rgba(0,0,0,0.35)] transition-transform duration-200 hover:-translate-y-1">
@@ -23,7 +24,7 @@ function SpaceshipCard({ id, name, model, dailyPrice, capacity, status }: Readon
           <p className="text-xs uppercase tracking-[0.3em] text-rebel-blue">Nave</p>
           <h3 className="mt-1 text-xl font-semibold text-sw-yellow">{name}</h3>
         </div>
-        <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${statusStyles}`}>
+        <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${statusStyles[status]}`}>
           {status}
         </span>
       </div>

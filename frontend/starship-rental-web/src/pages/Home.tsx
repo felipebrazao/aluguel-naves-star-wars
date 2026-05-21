@@ -53,8 +53,8 @@ function Home() {
                 description="Navegue pelas opções disponíveis, filtre por nome ou modelo e prepare o checkout da sua missão."
             >
                 <div className="mt-6 grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
-                    <label className="flex items-center gap-3 rounded-2xl border border-panel-border bg-black/30 px-4 py-3">
-                        <span className="text-rebel-blue">Busca</span>
+                    <label className="flex items-center gap-3 rounded-2xl border border-panel-border bg-surface-light/30 px-4 py-3">
+                        <span className="text-jedi-blue">Busca</span>
                         <input
                             className="w-full bg-transparent text-gray-100 outline-none placeholder:text-gray-500"
                             value={query}
@@ -63,7 +63,7 @@ function Home() {
                         />
                     </label>
 
-                    <label className="flex cursor-pointer items-center justify-between rounded-2xl border border-panel-border bg-black/30 px-4 py-3 text-sm text-gray-200">
+                    <label className="flex cursor-pointer items-center justify-between rounded-2xl border border-panel-border bg-surface-light/30 px-4 py-3 text-sm text-gray-200">
                         <span>Apenas disponíveis</span>
                         <input
                             type="checkbox"

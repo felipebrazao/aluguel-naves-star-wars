@@ -35,8 +35,8 @@ const rentalColumns: DataTableColumn<Rental>[] = [
         accessor: (rental) => (
             <span
                 className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${rental.status === 'ATIVO'
-                    ? 'border-rebel-blue/40 bg-rebel-blue/10 text-rebel-blue'
-                    : 'border-empire-red/40 bg-empire-red/10 text-empire-red'
+                    ? 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue'
+                    : 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green'
                     }`}
             >
                 {rental.status}
