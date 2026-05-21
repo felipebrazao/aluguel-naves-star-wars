@@ -18,8 +18,8 @@ public class UserImportService {
     private final RoleRepository roleRepository;
 
     public UserImportService(SwapiClient swapiClient,
-                             UserRepository userRepository,
-                             RoleRepository roleRepository) {
+            UserRepository userRepository,
+            RoleRepository roleRepository) {
         this.swapiClient = swapiClient;
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -47,7 +47,8 @@ public class UserImportService {
         user.setName(dto.getName());
         user.setEmail("swapi_" + swapiId + "@placeholder.com");
         user.setCpf("00000000000");
-        // TODO: substituir por BCryptPasswordEncoder.encode("placeholder") quando Spring Security for implementado
+        // TODO: substituir por BCryptPasswordEncoder.encode("placeholder") quando
+        // Spring Security for implementado
         user.setPasswordHash("placeholder");
         user.setRole(role);
 
@@ -59,4 +60,3 @@ public class UserImportService {
         return Integer.parseInt(parts[parts.length - 1]);
     }
 }
-

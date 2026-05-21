@@ -22,11 +22,11 @@ public class UserRequestDTO {
     @Size(min = 11, max = 11, message = "CPF deve ter 11 dígitos")
     private String cpf;
 
-    // TODO: aplicar BCryptPasswordEncoder ao receber a senha quando Spring Security for implementado
+    // TODO: aplicar BCryptPasswordEncoder ao receber a senha quando Spring Security
+    // for implementado
     @NotBlank(message = "Senha é obrigatória")
     private String password;
 
     @NotNull(message = "Role é obrigatória")
     private Integer roleId;
 }
-

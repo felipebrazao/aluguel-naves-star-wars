@@ -29,7 +29,8 @@ public class UserService {
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setCpf(dto.getCpf());
-        // TODO: substituir por BCryptPasswordEncoder.encode(dto.getPassword()) quando Spring Security for implementado
+        // TODO: substituir por BCryptPasswordEncoder.encode(dto.getPassword()) quando
+        // Spring Security for implementado
         user.setPasswordHash(dto.getPassword());
         user.setRole(role);
 
@@ -59,7 +60,8 @@ public class UserService {
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setCpf(dto.getCpf());
-        // TODO: substituir por BCryptPasswordEncoder.encode(dto.getPassword()) quando Spring Security for implementado
+        // TODO: substituir por BCryptPasswordEncoder.encode(dto.getPassword()) quando
+        // Spring Security for implementado
         user.setPasswordHash(dto.getPassword());
         user.setRole(role);
 
@@ -73,5 +75,3 @@ public class UserService {
         return userRepository.save(user);
     }
 }
-
-

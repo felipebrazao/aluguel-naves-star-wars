@@ -28,4 +28,3 @@ public class UserResponseDTO {
         this.createdAt = user.getCreatedAt();
     }
 }
-

@@ -67,8 +67,8 @@ class UserControllerTest {
             requestDTO.setRoleId(clientRole.getId());
 
             mockMvc.perform(post("/users")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").exists())
                     .andExpect(jsonPath("$.name").value("Luke Skywalker"))
@@ -88,8 +88,8 @@ class UserControllerTest {
             requestDTO.setRoleId(clientRole.getId());
 
             mockMvc.perform(post("/users")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -104,8 +104,8 @@ class UserControllerTest {
             requestDTO.setRoleId(clientRole.getId());
 
             mockMvc.perform(post("/users")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isBadRequest());
         }
     }
@@ -182,8 +182,8 @@ class UserControllerTest {
             requestDTO.setRoleId(clientRole.getId());
 
             mockMvc.perform(put("/users/{id}", user.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.name").value("Luke Skywalker"));
         }
@@ -199,8 +199,8 @@ class UserControllerTest {
             requestDTO.setRoleId(clientRole.getId());
 
             mockMvc.perform(put("/users/{id}", 99999)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message").value(containsString("Usuário não encontrado")));
         }
