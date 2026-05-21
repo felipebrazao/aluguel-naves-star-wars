@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import PageHeader from '../../components/shared/PageHeader'
 import DataTable, { type DataTableColumn } from '../../components/shared/DataTable'
 import Modal from '../../components/shared/Modal'
@@ -20,9 +20,55 @@ const fleetShips: FleetShip[] = [
 ]
 
 const fleetStatusStyles: Record<FleetStatus, string> = {
-    DISPONIVEL: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400',
-    MANUTENCAO: 'border-amber-500/40 bg-amber-500/10 text-amber-400',
-    DESATIVADA: 'border-gray-500/40 bg-gray-500/10 text-gray-300',
+    DISPONIVEL: 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green',
+    MANUTENCAO: 'border-windu-purple/40 bg-windu-purple/10 text-windu-purple',
+    DESATIVADA: 'border-sith-red/40 bg-sith-red/10 text-sith-red',
+}
+
+type FleetStatusBadgeProps = {
+    readonly status: FleetStatus
+}
+
+function FleetStatusBadge({ status }: FleetStatusBadgeProps) {
+    return (
+        <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${fleetStatusStyles[status]}`}>
+            {status}
+        </span>
+    )
+}
+
+type ManageStatusButtonProps = {
+    readonly ship: FleetShip
+    readonly onManage: (ship: FleetShip) => void
+}
+
+function ManageStatusButton({ ship, onManage }: ManageStatusButtonProps) {
+    return (
+        <PilledButton variant="primary" className="px-3 py-2 text-xs" onClick={() => onManage(ship)}>
+            Gerir Status
+        </PilledButton>
+    )
+}
+
+const renderFleetStatusCell: DataTableColumn<FleetShip>['accessor'] = (ship) => <FleetStatusBadge status={ship.status} />
+
+function createManageStatusAccessor(onManage: (ship: FleetShip) => void): DataTableColumn<FleetShip>['accessor'] {
+    return (ship) => <ManageStatusButton ship={ship} onManage={onManage} />
+}
+
+function createFleetColumns(onManage: (ship: FleetShip) => void): DataTableColumn<FleetShip>[] {
+    return [
+        { header: 'Nome da Nave', accessor: 'name' },
+        { header: 'Modelo', accessor: 'model' },
+        {
+            header: 'Status da Frota',
+            accessor: renderFleetStatusCell,
+        },
+        {
+            header: 'Ações',
+            accessor: createManageStatusAccessor(onManage),
+        },
+    ]
 }
 
 function FleetManagement() {
@@ -32,43 +78,15 @@ function FleetManagement() {
     const [estimatedCost, setEstimatedCost] = useState('')
     const [repairDescription, setRepairDescription] = useState('')
 
-    useEffect(() => {
-        if (selectedShip) {
-            setNewStatus(selectedShip.status)
-            setEstimatedCost('')
-            setRepairDescription('')
-        }
-    }, [selectedShip])
+    const handleOpenStatusModal = (ship: FleetShip) => {
+        setSelectedShip(ship)
+        setNewStatus(ship.status)
+        setEstimatedCost('')
+        setRepairDescription('')
+        setIsStatusModalOpen(true)
+    }
 
-    const fleetColumns: DataTableColumn<FleetShip>[] = [
-        { header: 'Nome da Nave', accessor: 'name' },
-        { header: 'Modelo', accessor: 'model' },
-        {
-            header: 'Status da Frota',
-            accessor: (ship) => (
-                <span
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${fleetStatusStyles[ship.status]}`}
-                >
-                    {ship.status}
-                </span>
-            ),
-        },
-        {
-            header: 'Ações',
-            accessor: (ship) => (
-                <PilledButton
-                    variant="primary"
-                    className="px-3 py-2 text-xs"
-                    onClick={() => {
-                        setSelectedShip(ship)
-                        setIsStatusModalOpen(true)
-                    }}
-                >
-                    Gerir Status
-                </PilledButton>
-            ),
-        },
-    ]
+    const fleetColumns = createFleetColumns(handleOpenStatusModal)
 
     const handleCloseModal = () => {
         setIsStatusModalOpen(false)
@@ -78,15 +96,17 @@ function FleetManagement() {
         setRepairDescription('')
     }
 
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
         event.preventDefault()
         handleCloseModal()
     }
 
+    const statusModalTitle = selectedShip ? `Gerir Status - ${selectedShip.name}` : 'Gerir Status'
+
     return (
         <section className="space-y-8">
             <PageHeader
-                overline="Admin"
+                overline="Operações"
                 title="Gestão de Frota"
                 description="Catálogo físico de naves e controle operacional da frota."
                 actions={
@@ -101,16 +121,16 @@ function FleetManagement() {
             <Modal
                 isOpen={isStatusModalOpen}
                 onClose={handleCloseModal}
-                title={`Gerir Status${selectedShip ? ` - ${selectedShip.name}` : ''}`}
+                title={statusModalTitle}
             >
                 <form className="space-y-5" onSubmit={handleSubmit}>
                     <div className="form-control">
                         <label htmlFor="newStatus" className="label">
-                            <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">Novo Status</span>
+                            <span className="label-text text-xs uppercase tracking-[0.25em] text-jedi-blue">Novo Status</span>
                         </label>
                         <select
                             id="newStatus"
-                            className="select select-bordered w-full bg-black/30 text-gray-100"
+                            className="select select-bordered w-full bg-surface-light/30 text-gray-100"
                             value={newStatus}
                             onChange={(event) => setNewStatus(event.target.value as FleetStatus)}
                         >
@@ -121,16 +141,16 @@ function FleetManagement() {
                     </div>
 
                     {newStatus === 'MANUTENCAO' ? (
-                        <div className="space-y-5 rounded-2xl border border-panel-border bg-black/30 p-4">
+                        <div className="space-y-5 rounded-2xl border border-panel-border bg-surface-light/30 p-4">
                             <div className="form-control">
                                 <label htmlFor="estimatedCost" className="label">
-                                    <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">Custo Estimado</span>
+                                    <span className="label-text text-xs uppercase tracking-[0.25em] text-jedi-blue">Custo Estimado</span>
                                 </label>
                                 <input
                                     id="estimatedCost"
                                     type="number"
                                     min="0"
-                                    className="input input-bordered w-full bg-black/30 text-gray-100 placeholder:text-gray-500"
+                                    className="input input-bordered w-full bg-surface-light/30 text-gray-100 placeholder:text-gray-500"
                                     value={estimatedCost}
                                     onChange={(event) => setEstimatedCost(event.target.value)}
                                 />
@@ -138,11 +158,11 @@ function FleetManagement() {
 
                             <div className="form-control">
                                 <label htmlFor="repairDescription" className="label">
-                                    <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">Descrição do Reparo</span>
+                                    <span className="label-text text-xs uppercase tracking-[0.25em] text-jedi-blue">Descrição do Reparo</span>
                                 </label>
                                 <textarea
                                     id="repairDescription"
-                                    className="textarea textarea-bordered min-h-28 w-full bg-black/30 text-gray-100 placeholder:text-gray-500"
+                                    className="textarea textarea-bordered min-h-28 w-full bg-surface-light/30 text-gray-100 placeholder:text-gray-500"
                                     value={repairDescription}
                                     onChange={(event) => setRepairDescription(event.target.value)}
                                 />

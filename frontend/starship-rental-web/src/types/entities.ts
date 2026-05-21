@@ -2,7 +2,6 @@ export interface User {
     id: string
     name: string
     email: string
-    role: 'Admin' | 'Cliente'
 }
 
 export interface Spaceship {
@@ -10,7 +9,7 @@ export interface Spaceship {
     name: string
     model: string
     daily_price: number
-    status: 'DISPONIVEL' | 'MANUTENCAO'
+    status: 'DISPONIVEL' | 'MANUTENCAO' | 'DESATIVADA'
     capacity: number
 }
 

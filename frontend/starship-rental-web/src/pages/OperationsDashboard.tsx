@@ -1,5 +1,5 @@
-import PageHeader from '../../components/shared/PageHeader'
-import DataTable, { type DataTableColumn } from '../../components/shared/DataTable'
+import PageHeader from '../components/shared/PageHeader'
+import DataTable, { type DataTableColumn } from '../components/shared/DataTable'
 
 type RentalStatus = 'ATIVO' | 'EM_USO' | 'FINALIZADO' | 'CANCELADO'
 
@@ -14,7 +14,7 @@ type Rental = {
 
 const rentals: Rental[] = [
     {
-        id: 'admin-rental-001',
+        id: 'rental-001',
         customerName: 'Luke Skywalker',
         spaceship: 'X-Wing Starfighter',
         status: 'ATIVO',
@@ -22,7 +22,7 @@ const rentals: Rental[] = [
         total: 3200,
     },
     {
-        id: 'admin-rental-002',
+        id: 'rental-002',
         customerName: 'Han Solo',
         spaceship: 'Millennium Falcon',
         status: 'EM_USO',
@@ -30,7 +30,7 @@ const rentals: Rental[] = [
         total: 4500,
     },
     {
-        id: 'admin-rental-003',
+        id: 'rental-003',
         customerName: 'Leia Organa',
         spaceship: 'TIE Advanced x1',
         status: 'FINALIZADO',
@@ -38,7 +38,7 @@ const rentals: Rental[] = [
         total: 5100,
     },
     {
-        id: 'admin-rental-004',
+        id: 'rental-004',
         customerName: 'Lando Calrissian',
         spaceship: 'Imperial Shuttle',
         status: 'CANCELADO',
@@ -49,9 +49,9 @@ const rentals: Rental[] = [
 
 const statusStyles: Record<RentalStatus, string> = {
     ATIVO: 'border-sw-yellow/40 bg-sw-yellow/10 text-sw-yellow',
-    EM_USO: 'border-rebel-blue/40 bg-rebel-blue/10 text-rebel-blue',
-    FINALIZADO: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400',
-    CANCELADO: 'border-empire-red/40 bg-empire-red/10 text-empire-red',
+    EM_USO: 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue',
+    FINALIZADO: 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green',
+    CANCELADO: 'border-sith-red/40 bg-sith-red/10 text-sith-red',
 }
 
 const rentalColumns: DataTableColumn<Rental>[] = [
@@ -74,11 +74,11 @@ const rentalColumns: DataTableColumn<Rental>[] = [
     },
 ]
 
-function AdminDashboard() {
+function OperationsDashboard() {
     return (
         <section className="space-y-8">
             <PageHeader
-                overline="Admin"
+                overline="Operações"
                 title="Dashboard Geral"
                 description="Visão consolidada de todos os aluguéis do sistema."
             />
@@ -88,4 +88,4 @@ function AdminDashboard() {
     )
 }
 
-export default AdminDashboard
+export default OperationsDashboard

@@ -1,8 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/shared/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
-import AdminDashboard from './pages/admin/AdminDashboard'
-import FleetManagement from './pages/admin/FleetManagement'
+import OperationsDashboard from './pages/OperationsDashboard'
+import FleetManagement from './pages/management/FleetManagement'
+import PlanetsManagement from './pages/management/PlanetsManagement'
+import Management from './pages/management/Management'
 import Login from './pages/Login'
 import Home from './pages/Home'
 import MyRentals from './pages/MyRentals'
@@ -16,6 +18,7 @@ function Router() {
             <Route element={<Layout />}>
                 <Route path="/" element={<Home />} />
                 <Route path="/nave/:id" element={<SpaceshipDetails />} />
+
                 <Route
                     path="/meus-alugueis"
                     element={
@@ -24,19 +27,37 @@ function Router() {
                         </ProtectedRoute>
                     }
                 />
+
                 <Route
-                    path="/admin"
+                    path="/painel/gestao"
                     element={
-                        <ProtectedRoute role="Admin">
-                            <AdminDashboard />
+                        <ProtectedRoute>
+                            <Management />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/painel"
+                    element={
+                        <ProtectedRoute>
+                            <OperationsDashboard />
                         </ProtectedRoute>
                     }
                 />
                 <Route
-                    path="/admin/frota"
+                    path="/frota"
                     element={
-                        <ProtectedRoute role="Admin">
+                        <ProtectedRoute>
                             <FleetManagement />
+                        </ProtectedRoute>
+                    }
+                />
+                <Route
+                    path="/planetas"
+                    element={
+                        <ProtectedRoute>
+                            <PlanetsManagement />
                         </ProtectedRoute>
                     }
                 />
