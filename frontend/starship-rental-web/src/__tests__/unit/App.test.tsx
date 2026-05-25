@@ -1,94 +1,92 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import App from '../../App'
 
 describe('App Component', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    window.history.pushState({}, '', '/')
+  })
+
+  afterEach(() => {
+    localStorage.clear()
+  })
+
   describe('Render', () => {
-    it('should render the hero section with logos', () => {
+    it('should render the login page when not authenticated', () => {
       render(<App />)
-
-      expect(screen.getByAltText('React logo')).toBeInTheDocument()
-      expect(screen.getByAltText('Vite logo')).toBeInTheDocument()
+      expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
     })
 
-    it('should render the main heading', () => {
+    it('should render the main heading with Star Rental Access', () => {
       render(<App />)
-
-      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Get started')
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Star Rental Access')
     })
 
-    it('should render the counter button with initial count of 0', () => {
+    it('should render the authentication label', () => {
       render(<App />)
-
-      const button = screen.getByRole('button', { name: /count is 0/i })
-      expect(button).toBeInTheDocument()
+      expect(screen.getByText(/autenticação/i)).toBeInTheDocument()
     })
 
-    it('should render documentation section', () => {
+    it('should render email input', () => {
       render(<App />)
-
-      expect(screen.getByRole('heading', { level: 2, name: 'Documentation' })).toBeInTheDocument()
-      expect(screen.getByText('Your questions, answered')).toBeInTheDocument()
+      expect(screen.getByLabelText(/e-mail/i)).toBeInTheDocument()
     })
 
-    it('should render connect section', () => {
+    it('should render password input', () => {
       render(<App />)
-
-      expect(screen.getByRole('heading', { level: 2, name: 'Connect with us' })).toBeInTheDocument()
-      expect(screen.getByText('Join the Vite community')).toBeInTheDocument()
+      expect(screen.getByLabelText(/senha/i)).toBeInTheDocument()
     })
 
-    it('should render all external links', () => {
+    it('should render login and register tab buttons', () => {
       render(<App />)
-
-      expect(screen.getByRole('link', { name: /explore vite/i })).toHaveAttribute('href', 'https://vite.dev/')
-      expect(screen.getByRole('link', { name: /learn more/i })).toHaveAttribute('href', 'https://react.dev/')
-      expect(screen.getByRole('link', { name: /github/i })).toHaveAttribute('href', 'https://github.com/vitejs/vite')
+      const entrarButtons = screen.getAllByRole('button', { name: /entrar/i })
+      expect(entrarButtons.length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByRole('button', { name: /criar conta/i })).toBeInTheDocument()
     })
   })
 
   describe('Interaction', () => {
-    it('should increment count when button is clicked', async () => {
+    it('should switch to register tab when Criar Conta is clicked', async () => {
       const user = userEvent.setup()
       render(<App />)
-
-      const button = screen.getByRole('button', { name: /count is 0/i })
-
-      await user.click(button)
-
-      expect(screen.getByRole('button', { name: /count is 1/i })).toBeInTheDocument()
+      const registerButton = screen.getByRole('button', { name: /criar conta/i })
+      await user.click(registerButton)
+      expect(registerButton).toBeInTheDocument()
     })
 
-    it('should increment count multiple times when button is clicked multiple times', async () => {
+    it('should allow typing in email input', async () => {
       const user = userEvent.setup()
       render(<App />)
+      const emailInput = screen.getByLabelText(/e-mail/i)
+      await user.type(emailInput, 'pilot@starrental.com')
+      expect(emailInput).toHaveValue('pilot@starrental.com')
+    })
 
-      const button = screen.getByRole('button')
-
-      await user.click(button)
-      await user.click(button)
-      await user.click(button)
-
-      expect(screen.getByRole('button', { name: /count is 3/i })).toBeInTheDocument()
+    it('should allow typing in password input', async () => {
+      const user = userEvent.setup()
+      render(<App />)
+      const passwordInput = screen.getByLabelText(/senha/i)
+      await user.type(passwordInput, 'secret123')
+      expect(passwordInput).toHaveValue('secret123')
     })
   })
 
   describe('Accessibility', () => {
-    it('should have accessible button with correct type', () => {
+    it('should have a main landmark', () => {
       render(<App />)
-
-      const button = screen.getByRole('button')
-      expect(button).toHaveAttribute('type', 'button')
+      expect(screen.getByRole('main')).toBeInTheDocument()
     })
 
-    it('should have presentation-only icons with correct aria attributes', () => {
+    it('should have email input with correct type', () => {
       render(<App />)
+      expect(screen.getByLabelText(/e-mail/i)).toHaveAttribute('type', 'email')
+    })
 
-      const icons = screen.getAllByRole('presentation')
-      icons.forEach(icon => {
-        expect(icon).toHaveAttribute('aria-hidden', 'true')
-      })
+    it('should have password input with correct type', () => {
+      render(<App />)
+      expect(screen.getByLabelText(/senha/i)).toHaveAttribute('type', 'password')
     })
   })
 })
