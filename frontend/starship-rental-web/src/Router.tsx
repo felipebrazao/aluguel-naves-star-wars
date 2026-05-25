@@ -10,13 +10,15 @@ import Home from './pages/Home'
 import MyRentals from './pages/MyRentals'
 import SpaceshipDetails from './pages/SpaceshipDetails'
 
+
 function Router() {
+    const isAuthenticated = !!localStorage.getItem('token')
     return (
         <Routes>
             <Route path="/login" element={<Login />} />
 
             <Route element={<Layout />}>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={isAuthenticated ? <Home /> : <Navigate to="/login" replace />} />
                 <Route path="/nave/:id" element={<SpaceshipDetails />} />
 
                 <Route

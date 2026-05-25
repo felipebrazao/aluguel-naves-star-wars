@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
@@ -63,6 +65,31 @@ public class UserController {
                 "id", user.getId(),
                 "name", user.getName(),
                 "active", user.getActive()
+        ));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String password = body.get("password");
+        if (email == null || password == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "email and password are required"));
+        }
+
+        Optional<User> opt = userService.findByEmail(email);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Credenciais inválidas"));
+        }
+
+        User user = opt.get();
+        if (user.getPasswordHash() == null || !user.getPasswordHash().equals(password)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Credenciais inválidas"));
+        }
+
+        String token = UUID.randomUUID().toString();
+        return ResponseEntity.ok(Map.of(
+                "token", token,
+                "user", new UserResponseDTO(user)
         ));
     }
 }
