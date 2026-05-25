@@ -180,7 +180,7 @@ function PlanetsManagement() {
                             Cancelar
                         </button>
 
-                        <PilledButton variant="primary" className="w-full sm:w-auto">
+                        <PilledButton variant="primary" type="submit" className="w-full sm:w-auto">
                             Guardar Alterações
                         </PilledButton>
                     </div>
