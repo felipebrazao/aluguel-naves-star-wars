@@ -120,7 +120,7 @@ class SwapiClientTest {
         @SuppressWarnings("unchecked")
         void shouldHandleNullBodyInResponse() {
             ResponseEntity<List<SwapiStarshipDTO>> responseEntity = new ResponseEntity<>(
-                    null,
+                    (List<SwapiStarshipDTO>) null,
                     HttpStatus.OK
             );
 

@@ -194,7 +194,7 @@ class SpaceshipImportServiceTest {
 
         @Test
         @DisplayName("Should handle passengers with 'n/a' value")
-        void shouldHandleNA passengers() {
+        void shouldHandleNAPassengers() {
             SwapiStarshipDTO naPassengersDTO = new SwapiStarshipDTO();
             naPassengersDTO.setUrl("https://swapi.info/api/starships/25/");
             naPassengersDTO.setName("N/A Ship");

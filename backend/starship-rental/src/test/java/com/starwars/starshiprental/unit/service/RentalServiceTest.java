@@ -220,7 +220,7 @@ class RentalServiceTest {
             validRequestDTO.setEndDate(LocalDateTime.now().plusDays(1));
 
             assertThatThrownBy(() -> rentalService.create(validRequestDTO))
-                    .isInstanceOf(IllegalArgumentException.class)
+                    .isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("Data de fim deve ser posterior à data de início");
         }
 

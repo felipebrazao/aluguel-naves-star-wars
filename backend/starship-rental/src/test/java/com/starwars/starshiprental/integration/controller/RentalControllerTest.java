@@ -1,7 +1,6 @@
 package com.starwars.starshiprental.integration.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.starwars.starshiprental.config.TestContainersConfig;
+import tools.jackson.databind.ObjectMapper;
 import com.starwars.starshiprental.dto.RentalRequestDTO;
 import com.starwars.starshiprental.entity.*;
 import com.starwars.starshiprental.repository.*;
@@ -10,9 +9,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,7 +25,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(TestContainersConfig.class)
 @ActiveProfiles("test")
 @Transactional
 class RentalControllerTest {
@@ -56,6 +53,9 @@ class RentalControllerTest {
     @Autowired
     private PaymentMethodRepository paymentMethodRepository;
 
+    @Autowired
+    private PaymentStatusRepository paymentStatusRepository;
+
     private SpaceshipStatus disponivelStatus;
     private SpaceshipStatus alugadaStatus;
     private RentalStatus ativaStatus;
@@ -73,6 +73,8 @@ class RentalControllerTest {
         ativaStatus = getOrCreateRentalStatus("ativa");
         concluidaStatus = getOrCreateRentalStatus("concluida");
         canceladaStatus = getOrCreateRentalStatus("cancelada");
+
+        getOrCreatePaymentStatus("pendente");
 
         pickupPlanet = createPlanet("Tatooine");
         returnPlanet = createPlanet("Coruscant");
@@ -290,6 +292,15 @@ class RentalControllerTest {
                     RentalStatus status = new RentalStatus();
                     status.setName(name);
                     return rentalStatusRepository.save(status);
+                });
+    }
+
+    private PaymentStatus getOrCreatePaymentStatus(String name) {
+        return paymentStatusRepository.findByName(name)
+                .orElseGet(() -> {
+                    PaymentStatus status = new PaymentStatus();
+                    status.setName(name);
+                    return paymentStatusRepository.save(status);
                 });
     }
 

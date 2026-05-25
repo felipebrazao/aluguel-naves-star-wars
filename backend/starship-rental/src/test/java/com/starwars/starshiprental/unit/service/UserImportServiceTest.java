@@ -53,14 +53,10 @@ class UserImportServiceTest {
         lukeDTO = new SwapiPersonDTO();
         lukeDTO.setUrl("https://swapi.info/api/people/1/");
         lukeDTO.setName("Luke Skywalker");
-        lukeDTO.setHeight("172");
-        lukeDTO.setMass("77");
 
         leiaDTO = new SwapiPersonDTO();
         leiaDTO.setUrl("https://swapi.info/api/people/5/");
         leiaDTO.setName("Leia Organa");
-        leiaDTO.setHeight("150");
-        leiaDTO.setMass("49");
     }
 
     @Nested

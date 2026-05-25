@@ -9,5 +9,8 @@ public class SwapiPersonDTO {
 
     private String name;
     private String url;
+    private String height;
+    private String mass;
+    private String homeworld;
 }
 

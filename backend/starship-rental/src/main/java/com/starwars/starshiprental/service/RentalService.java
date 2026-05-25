@@ -52,11 +52,11 @@ public class RentalService {
         Planet returnPlanet = planetRepository.findById(dto.getReturnPlanetId())
                 .orElseThrow(() -> new IllegalArgumentException("Planeta de devolução não encontrado com id: " + dto.getReturnPlanetId()));
 
+        long days = ChronoUnit.DAYS.between(dto.getStartDate(), dto.getEndDate());
+        if (days <= 0) throw new IllegalStateException("Data de fim deve ser posterior à data de início");
+
         RentalStatus status = rentalStatusRepository.findByName("ativa")
                 .orElseThrow(() -> new IllegalStateException("Status 'ativa' não encontrado"));
-
-        long days = ChronoUnit.DAYS.between(dto.getStartDate(), dto.getEndDate());
-        if (days <= 0) throw new IllegalArgumentException("Data de fim deve ser posterior à data de início");
 
         BigDecimal totalPrice = spaceship.getDailyPrice().multiply(BigDecimal.valueOf(days));
 
