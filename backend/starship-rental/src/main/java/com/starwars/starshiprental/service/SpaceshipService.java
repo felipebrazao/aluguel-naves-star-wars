@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class SpaceshipService {
@@ -85,5 +86,20 @@ public class SpaceshipService {
 
         spaceship.setActive(!spaceship.getActive());
         return spaceshipRepository.save(spaceship);
+    }
+
+    public SpaceshipResponseDTO updateStatus(Integer id, String statusName) {
+        Spaceship spaceship = spaceshipRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Nave não encontrada com id: " + id));
+
+        if (statusName == null || !Set.of("manutencao", "desativada").contains(statusName)) {
+            throw new IllegalStateException("Status inválido: " + statusName);
+        }
+
+        SpaceshipStatus status = statusRepository.findByName(statusName)
+                .orElseThrow(() -> new IllegalStateException("Status inválido: " + statusName));
+
+        spaceship.setStatus(status);
+        return new SpaceshipResponseDTO(spaceshipRepository.save(spaceship));
     }
 }

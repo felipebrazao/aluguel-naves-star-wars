@@ -30,8 +30,7 @@ public class SpaceshipController {
         int total = importService.importSpaceships();
         return ResponseEntity.ok(Map.of(
                 "mensagem", "Importação concluída com sucesso!",
-                "totalNaves", total
-        ));
+                "totalNaves", total));
     }
 
     @PostMapping
@@ -52,7 +51,7 @@ public class SpaceshipController {
 
     @PutMapping("/{id}")
     public ResponseEntity<SpaceshipResponseDTO> update(@PathVariable Integer id,
-                                                       @Validated @RequestBody SpaceshipRequestDTO dto) {
+            @Validated @RequestBody SpaceshipRequestDTO dto) {
         return ResponseEntity.ok(spaceshipService.update(id, dto));
     }
 
@@ -62,7 +61,12 @@ public class SpaceshipController {
         return ResponseEntity.ok(Map.of(
                 "id", spaceship.getId(),
                 "name", spaceship.getName(),
-                "active", spaceship.getActive()
-        ));
+                "active", spaceship.getActive()));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<SpaceshipResponseDTO> updateStatus(@PathVariable Integer id,
+            @RequestBody Map<String, String> body) {
+        return ResponseEntity.ok(spaceshipService.updateStatus(id, body.get("status")));
     }
 }

@@ -70,8 +70,8 @@ class SpaceshipControllerTest {
             requestDTO.setCostInCredits(100000L);
 
             mockMvc.perform(post("/spaceships")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").exists())
                     .andExpect(jsonPath("$.name").value("Millennium Falcon"))
@@ -90,8 +90,8 @@ class SpaceshipControllerTest {
             requestDTO.setCostInCredits(100000L);
 
             mockMvc.perform(post("/spaceships")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isBadRequest());
         }
 
@@ -105,8 +105,8 @@ class SpaceshipControllerTest {
             requestDTO.setCostInCredits(100000L);
 
             mockMvc.perform(post("/spaceships")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isBadRequest());
         }
     }
@@ -182,8 +182,8 @@ class SpaceshipControllerTest {
             requestDTO.setCostInCredits(150000L);
 
             mockMvc.perform(put("/spaceships/{id}", spaceship.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.name").value("Updated Falcon"))
                     .andExpect(jsonPath("$.model").value("YT-1300 Updated"))
@@ -200,8 +200,8 @@ class SpaceshipControllerTest {
             requestDTO.setCostInCredits(100000L);
 
             mockMvc.perform(put("/spaceships/{id}", 99999)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message").value(containsString("Nave não encontrada")));
         }
@@ -234,6 +234,73 @@ class SpaceshipControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("PATCH /spaceships/{id}/status")
+    class UpdateStatusTests {
+
+        @Test
+        @DisplayName("Should update spaceship status to manutencao")
+        void shouldUpdateSpaceshipStatusToManutencao() throws Exception {
+            createStatus("manutencao");
+            Spaceship spaceship = createSpaceship("Falcon", true);
+
+            mockMvc.perform(patch("/spaceships/{id}/status", spaceship.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(java.util.Map.of("status", "manutencao"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(spaceship.getId()))
+                    .andExpect(jsonPath("$.status").value("manutencao"));
+        }
+
+        @Test
+        @DisplayName("Should update spaceship status to desativada")
+        void shouldUpdateSpaceshipStatusToDesativada() throws Exception {
+            createStatus("desativada");
+            Spaceship spaceship = createSpaceship("Falcon", true);
+
+            mockMvc.perform(patch("/spaceships/{id}/status", spaceship.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(java.util.Map.of("status", "desativada"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(spaceship.getId()))
+                    .andExpect(jsonPath("$.status").value("desativada"));
+        }
+
+        @Test
+        @DisplayName("Should return bad request when status is invalid")
+        void shouldReturnBadRequestWhenStatusIsInvalid() throws Exception {
+            Spaceship spaceship = createSpaceship("Falcon", true);
+
+            mockMvc.perform(patch("/spaceships/{id}/status", spaceship.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(java.util.Map.of("status", "alugada"))))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Should return bad request when status is disponivel")
+        void shouldReturnBadRequestWhenStatusIsDisponivel() throws Exception {
+            Spaceship spaceship = createSpaceship("Falcon", true);
+
+            mockMvc.perform(patch("/spaceships/{id}/status", spaceship.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(java.util.Map.of("status", "disponivel"))))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        @DisplayName("Should return 404 when updating status of non-existent spaceship")
+        void shouldReturn404WhenUpdatingStatusOfNonExistentSpaceship() throws Exception {
+            createStatus("manutencao");
+
+            mockMvc.perform(patch("/spaceships/{id}/status", 99999)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(java.util.Map.of("status", "manutencao"))))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.message").value(containsString("Nave não encontrada")));
+        }
+    }
+
     private Spaceship createSpaceship(String name, boolean active) {
         Spaceship spaceship = new Spaceship();
         spaceship.setName(name);
@@ -244,5 +311,14 @@ class SpaceshipControllerTest {
         spaceship.setStatus(disponivelStatus);
         spaceship.setActive(active);
         return spaceshipRepository.save(spaceship);
+    }
+
+    private SpaceshipStatus createStatus(String name) {
+        return spaceshipStatusRepository.findByName(name)
+                .orElseGet(() -> {
+                    SpaceshipStatus status = new SpaceshipStatus();
+                    status.setName(name);
+                    return spaceshipStatusRepository.save(status);
+                });
     }
 }
