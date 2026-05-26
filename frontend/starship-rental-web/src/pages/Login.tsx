@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PilledButton from "../components/shared/PilledButton";
+import { useAuth } from "../contexts/AuthContext";
+import { api } from "../services/api";
+
+type ErrorPayload = {
+  message?: unknown;
+  detail?: unknown;
+  title?: unknown;
+  error?: unknown;
+  errors?: unknown;
+  fieldErrors?: unknown;
+};
 
 type LoginResponse = {
   token: string;
@@ -12,8 +23,100 @@ type LoginResponse = {
   };
 };
 
+const getMessageFromValidationError = (item: unknown): string | null => {
+  if (typeof item === "string") {
+    return item;
+  }
+
+  if (!item || typeof item !== "object") {
+    return null;
+  }
+
+  const record = item as Record<string, unknown>;
+
+  if (typeof record.defaultMessage === "string") {
+    return record.defaultMessage;
+  }
+
+  if (typeof record.message === "string") {
+    return record.message;
+  }
+
+  if (typeof record.detail === "string") {
+    return record.detail;
+  }
+
+  if (typeof record.field === "string") {
+    return record.field;
+  }
+
+  return null;
+};
+
+const extractErrorMessage = (error: unknown): string => {
+  if (
+    typeof error !== "object" ||
+    error === null ||
+    !("response" in error) ||
+    typeof error.response !== "object" ||
+    error.response === null
+  ) {
+    return error instanceof Error ? error.message : "Erro de conexão";
+  }
+
+  const response = error.response as {
+    data?: unknown;
+    statusText?: string;
+  };
+
+  if (typeof response.data === "string") {
+    return response.data;
+  }
+
+  if (!response.data || typeof response.data !== "object") {
+    return response.statusText || "Erro ao processar a solicitação";
+  }
+
+  const parsed = response.data as ErrorPayload;
+
+  if (typeof parsed.message === "string") {
+    return parsed.message;
+  }
+
+  if (typeof parsed.detail === "string") {
+    return parsed.detail;
+  }
+
+  if (Array.isArray(parsed.errors) && parsed.errors.length > 0) {
+    return (
+      getMessageFromValidationError(parsed.errors[0]) ||
+      response.statusText ||
+      "Erro de validação"
+    );
+  }
+
+  if (Array.isArray(parsed.fieldErrors) && parsed.fieldErrors.length > 0) {
+    return (
+      getMessageFromValidationError(parsed.fieldErrors[0]) ||
+      response.statusText ||
+      "Erro de validação"
+    );
+  }
+
+  if (typeof parsed.title === "string") {
+    return parsed.title;
+  }
+
+  if (typeof parsed.error === "string") {
+    return parsed.error;
+  }
+
+  return response.statusText || "Erro inesperado";
+};
+
 function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
 
   const [email, setEmail] = useState("");
@@ -22,71 +125,15 @@ function Login() {
   const [cpf, setCpf] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const extractErrorMessage = async (response: Response) => {
-    const rawBody = await response.text();
-
-    if (!rawBody) {
-      return response.statusText || "Erro ao processar a solicitação";
-    }
-
-    try {
-      const parsed = JSON.parse(rawBody);
-
-      if (typeof parsed === "string") {
-        return parsed;
-      }
-
-      if (parsed.message) {
-        return parsed.message;
-      }
-
-      if (parsed.detail) {
-        return parsed.detail;
-      }
-
-      if (Array.isArray(parsed.errors) && parsed.errors.length > 0) {
-        const firstError = parsed.errors[0];
-
-        if (typeof firstError === "string") {
-          return firstError;
-        }
-
-        return (
-          firstError.defaultMessage ||
-          firstError.message ||
-          firstError.detail ||
-          firstError.field ||
-          response.statusText ||
-          "Erro de validação"
-        );
-      }
-
-      if (Array.isArray(parsed.fieldErrors) && parsed.fieldErrors.length > 0) {
-        const firstFieldError = parsed.fieldErrors[0];
-        return (
-          firstFieldError.defaultMessage ||
-          firstFieldError.message ||
-          firstFieldError.field ||
-          response.statusText ||
-          "Erro de validação"
-        );
-      }
-
-      return (
-        parsed.title || parsed.error || response.statusText || "Erro inesperado"
-      );
-    } catch {
-      return rawBody;
-    }
-  };
-
   useEffect(() => {
     if (localStorage.getItem("token")) {
-      window.location.replace("/");
+      globalThis.location.replace("/");
     }
   }, [navigate]);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit: React.ComponentProps<"form">["onSubmit"] = async (
+    event
+  ) => {
     event.preventDefault();
     setError(null);
 
@@ -119,61 +166,37 @@ function Login() {
     }
 
     const authenticate = async () => {
-      const loginResponse = await fetch("http://localhost:8080/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const loginResponse = await api.post<LoginResponse>("/users/login", {
+        email,
+        password,
       });
-
-      if (loginResponse.status !== 200) {
-        throw new Error("Falha ao autenticar após o cadastro");
-      }
-
-      const loginData: LoginResponse = await loginResponse.json();
-      localStorage.setItem("token", loginData.token);
-      localStorage.setItem("user", JSON.stringify(loginData.user));
+      const loginData = loginResponse.data;
+      login(loginData.user, loginData.token);
       navigate("/", { replace: true });
     };
 
     try {
       if (!isLogin) {
-        const registerResponse = await fetch("http://localhost:8080/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            email,
-            cpf,
-            password,
-            roleId: 2,
-          }),
+        await api.post("/users", {
+          name,
+          email,
+          cpf,
+          password,
+          roleId: 2,
         });
-
-        if (!registerResponse.ok) {
-          throw new Error(await extractErrorMessage(registerResponse));
-        }
-
-        await registerResponse.json();
         await authenticate();
         return;
       }
 
-      const res = await fetch("http://localhost:8080/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const res = await api.post<LoginResponse>("/users/login", {
+        email,
+        password,
       });
-
-      if (res.ok) {
-        const data: LoginResponse = await res.json();
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        window.location.replace("/");
-      } else {
-        throw new Error(await extractErrorMessage(res));
-      }
+      const data = res.data;
+      login(data.user, data.token);
+      globalThis.location.replace("/");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erro de conexão");
+      setError(extractErrorMessage(e));
     }
   };
 
@@ -197,11 +220,10 @@ function Login() {
           <button
             type="button"
             onClick={() => setIsLogin(true)}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${
-              isLogin
+            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${isLogin
                 ? "border-sw-yellow bg-sw-yellow/10 text-sw-yellow shadow-[0_0_18px_rgba(255,232,31,0.12)]"
                 : "border-transparent text-gray-400 hover:text-gray-200"
-            }`}
+              }`}
           >
             Entrar
           </button>
@@ -209,11 +231,10 @@ function Login() {
           <button
             type="button"
             onClick={() => setIsLogin(false)}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${
-              !isLogin
+            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${!isLogin
                 ? "border-sw-yellow bg-sw-yellow/10 text-sw-yellow shadow-[0_0_18px_rgba(255,232,31,0.12)]"
                 : "border-transparent text-gray-400 hover:text-gray-200"
-            }`}
+              }`}
           >
             Criar Conta
           </button>

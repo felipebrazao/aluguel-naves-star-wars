@@ -13,6 +13,10 @@ import SpaceshipDetails from './pages/SpaceshipDetails'
 
 function Router() {
     const isAuthenticated = !!localStorage.getItem('token')
+    const storedUser = localStorage.getItem('user')
+    const parsedUser = storedUser ? JSON.parse(storedUser) as { id?: number } : null
+    const currentUserId = parsedUser?.id
+
     return (
         <Routes>
             <Route path="/login" element={<Login />} />
@@ -25,7 +29,7 @@ function Router() {
                     path="/meus-alugueis"
                     element={
                         <ProtectedRoute>
-                            <MyRentals />
+                            {typeof currentUserId === 'number' ? <MyRentals userId={currentUserId} /> : <Navigate to="/login" replace />}
                         </ProtectedRoute>
                     }
                 />
