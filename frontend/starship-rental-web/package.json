@@ -9,11 +9,13 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest",
+    "test:ci": "vitest run --coverage",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
     "test:e2e": "node node_modules/@playwright/test/cli.js test",
     "test:e2e:ui": "node node_modules/@playwright/test/cli.js test --ui",
-    "test:e2e:report": "node node_modules/@playwright/test/cli.js show-report"
+    "test:e2e:report": "node node_modules/@playwright/test/cli.js show-report",
+    "verify": "npm run lint && npm run test:ci && npm run build && npm run test:e2e"
   },
   "dependencies": {
     "framer-motion": "^12.40.0",
