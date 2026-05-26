@@ -1,5 +1,9 @@
 package com.starwars.starshiprental.controller;
 
+// TODO: implementar Spring Security com validação de token UUID
+// nos endpoints que exigem autenticação (todos exceto POST /users e POST /users/login)
+// Referência: Auth planejada na branch de integração frontend
+
 import com.starwars.starshiprental.dto.UserRequestDTO;
 import com.starwars.starshiprental.dto.UserResponseDTO;
 import com.starwars.starshiprental.entity.User;
@@ -32,8 +36,7 @@ public class UserController {
         int total = userImportService.importUsers();
         return ResponseEntity.ok(Map.of(
                 "mensagem", "Importação de usuários concluída com sucesso!",
-                "totalUsuarios", total
-        ));
+                "totalUsuarios", total));
     }
 
     @PostMapping
@@ -54,7 +57,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> update(@PathVariable Integer id,
-                                                  @Validated @RequestBody UserRequestDTO dto) {
+            @Validated @RequestBody UserRequestDTO dto) {
         return ResponseEntity.ok(userService.update(id, dto));
     }
 
@@ -64,8 +67,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of(
                 "id", user.getId(),
                 "name", user.getName(),
-                "active", user.getActive()
-        ));
+                "active", user.getActive()));
     }
 
     @PostMapping("/login")
@@ -89,8 +91,6 @@ public class UserController {
         String token = UUID.randomUUID().toString();
         return ResponseEntity.ok(Map.of(
                 "token", token,
-                "user", new UserResponseDTO(user)
-        ));
+                "user", new UserResponseDTO(user)));
     }
 }
-
