@@ -1,32 +1,66 @@
 import { useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import PageHeader from '../components/shared/PageHeader'
 import PilledButton from '../components/shared/PilledButton'
-
-const spaceship = {
-    id: 'x-wing-starfighter',
-    name: 'X-Wing Starfighter',
-    model: 'T-65B',
-    manufacturer: 'Incom Corporation',
-    capacity: 1,
-    dailyPrice: 3200,
-    status: 'DISPONIVEL' as const,
-}
+import { useFetch } from '../hooks/useFetch'
+import { spaceshipService } from '../services/api'
 
 const locations = ['Coruscant Spaceport', 'Tatooine Mos Eisley', 'Naboo Royal Dock']
 
 function SpaceshipDetails() {
+    const { id } = useParams<{ id: string }>()
     const [startDate, setStartDate] = useState('')
     const [endDate, setEndDate] = useState('')
     const [pickupLocation, setPickupLocation] = useState('')
     const [dropoffLocation, setDropoffLocation] = useState('')
 
+    const spaceshipId = Number(id)
+    const isValidSpaceshipId = Number.isInteger(spaceshipId) && spaceshipId > 0
+
+    const { data: spaceship, loading, error } = useFetch(() => {
+        if (!isValidSpaceshipId) {
+            throw new Error('Identificador de nave inválido.')
+        }
+
+        return spaceshipService.getById(spaceshipId)
+    })
+
     const totalDays =
         startDate && endDate
             ? Math.max(0, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)))
             : 0
-    const totalPrice = totalDays * spaceship.dailyPrice
+    const totalPrice = totalDays * Number(spaceship?.dailyPrice ?? 0)
 
     const isSubmitDisabled = !startDate || !endDate || !pickupLocation || !dropoffLocation || totalDays <= 0
+
+    if (loading) {
+        return (
+            <section className="space-y-8">
+                <PageHeader
+                    overline="Detalhes da Nave"
+                    title="Carregando..."
+                    description="Buscando informações da nave selecionada."
+                />
+                <p className="text-sw-yellow">Carregando detalhes da nave...</p>
+            </section>
+        )
+    }
+
+    if (error || !spaceship) {
+        return (
+            <section className="space-y-8">
+                <PageHeader
+                    overline="Detalhes da Nave"
+                    title="Falha ao carregar"
+                    description="Não foi possível carregar os detalhes da nave selecionada."
+                />
+                <p className="text-sith-red">{error ?? 'Nave não encontrada.'}</p>
+                <Link to="/" className="text-jedi-blue underline">
+                    Voltar para o catálogo
+                </Link>
+            </section>
+        )
+    }
 
     return (
         <section className="space-y-8">

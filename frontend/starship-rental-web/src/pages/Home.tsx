@@ -1,48 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import SpaceshipCard from '../components/SpaceshipCard'
 import PageHeader from '../components/shared/PageHeader'
-
-const ships = [
-    {
-        id: 'millennium-falcon',
-        name: 'Millennium Falcon',
-        model: 'YT-1300',
-        dailyPrice: 4500,
-        capacity: 6,
-        status: 'DISPONIVEL' as const,
-    },
-    {
-        id: 'x-wing-starfighter',
-        name: 'X-Wing Starfighter',
-        model: 'T-65B',
-        dailyPrice: 3200,
-        capacity: 1,
-        status: 'DISPONIVEL' as const,
-    },
-    {
-        id: 'tie-advanced',
-        name: 'TIE Advanced x1',
-        model: 'Experimental Interceptor',
-        dailyPrice: 5100,
-        capacity: 1,
-        status: 'MANUTENCAO' as const,
-    },
-]
+import { spaceshipService } from '../services/api'
+import { useFetch } from '../hooks/useFetch'
+import type { Spaceship } from '../types/api'
 
 function Home() {
     const [query, setQuery] = useState('')
     const [onlyAvailable, setOnlyAvailable] = useState(false)
 
+    const fetchSpaceships = useCallback(() => {
+        return onlyAvailable ? spaceshipService.getAvailable() : spaceshipService.getAll()
+    }, [onlyAvailable])
+
+    const { data: spaceships, loading, error } = useFetch(fetchSpaceships)
+
     const filteredShips = useMemo(() => {
-        return ships.filter((ship) => {
+        return (spaceships ?? []).filter((ship: Spaceship) => {
             const matchesQuery = [ship.name, ship.model].some((value) =>
                 value.toLowerCase().includes(query.toLowerCase()),
             )
-            const matchesStatus = !onlyAvailable || ship.status === 'DISPONIVEL'
 
-            return matchesQuery && matchesStatus
+            return matchesQuery
         })
-    }, [onlyAvailable, query])
+    }, [query, spaceships])
 
     return (
         <section className="space-y-8">
@@ -75,14 +56,17 @@ function Home() {
                 </div>
             </PageHeader>
 
+            {loading ? <p className="text-sm text-sw-yellow">Carregando naves...</p> : null}
+            {error ? <p className="text-sm text-sith-red">{error}</p> : null}
+
             <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {filteredShips.map((ship) => (
                     <SpaceshipCard
                         key={ship.id}
-                        id={ship.id}
+                        id={String(ship.id)}
                         name={ship.name}
                         model={ship.model}
-                        dailyPrice={ship.dailyPrice}
+                        dailyPrice={Number(ship.dailyPrice)}
                         capacity={ship.capacity}
                         status={ship.status}
                     />

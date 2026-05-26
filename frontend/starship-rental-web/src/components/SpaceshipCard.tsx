@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import OutlineButton from './shared/OutlineButton'
+import type { SpaceshipStatus } from '../types/api'
 
 export type SpaceshipCardProps = {
   id: string
@@ -7,12 +8,13 @@ export type SpaceshipCardProps = {
   model: string
   dailyPrice: number
   capacity: number
-  status: 'DISPONIVEL' | 'MANUTENCAO' | 'DESATIVADA'
+  status: SpaceshipStatus
 }
 
 function SpaceshipCard({ id, name, model, dailyPrice, capacity, status }: Readonly<SpaceshipCardProps>) {
-  const statusStyles: Record<SpaceshipCardProps['status'], string> = {
+  const statusStyles: Record<SpaceshipStatus, string> = {
     DISPONIVEL: 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green',
+    ALUGADA: 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue',
     MANUTENCAO: 'border-windu-purple/40 bg-windu-purple/10 text-windu-purple',
     DESATIVADA: 'border-sith-red/40 bg-sith-red/10 text-sith-red',
   }
