@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import PilledButton from "../components/shared/PilledButton";
 import { useAuth } from "../contexts/AuthContext";
-import { api } from "../services/api";
+import { userService } from "../services/api";
 
 type ErrorPayload = {
   message?: unknown;
@@ -11,16 +11,6 @@ type ErrorPayload = {
   error?: unknown;
   errors?: unknown;
   fieldErrors?: unknown;
-};
-
-type LoginResponse = {
-  token: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-  };
 };
 
 const getMessageFromValidationError = (item: unknown): string | null => {
@@ -132,7 +122,7 @@ function Login() {
   }, [navigate]);
 
   const handleSubmit: React.ComponentProps<"form">["onSubmit"] = async (
-    event
+    event,
   ) => {
     event.preventDefault();
     setError(null);
@@ -166,18 +156,14 @@ function Login() {
     }
 
     const authenticate = async () => {
-      const loginResponse = await api.post<LoginResponse>("/users/login", {
-        email,
-        password,
-      });
-      const loginData = loginResponse.data;
+      const loginData = await userService.login({ email, password });
       login(loginData.user, loginData.token);
       navigate("/", { replace: true });
     };
 
     try {
       if (!isLogin) {
-        await api.post("/users", {
+        await userService.create({
           name,
           email,
           cpf,
@@ -188,11 +174,7 @@ function Login() {
         return;
       }
 
-      const res = await api.post<LoginResponse>("/users/login", {
-        email,
-        password,
-      });
-      const data = res.data;
+      const data = await userService.login({ email, password });
       login(data.user, data.token);
       globalThis.location.replace("/");
     } catch (e) {
@@ -220,10 +202,11 @@ function Login() {
           <button
             type="button"
             onClick={() => setIsLogin(true)}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${isLogin
+            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${
+              isLogin
                 ? "border-sw-yellow bg-sw-yellow/10 text-sw-yellow shadow-[0_0_18px_rgba(255,232,31,0.12)]"
                 : "border-transparent text-gray-400 hover:text-gray-200"
-              }`}
+            }`}
           >
             Entrar
           </button>
@@ -231,10 +214,11 @@ function Login() {
           <button
             type="button"
             onClick={() => setIsLogin(false)}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${!isLogin
+            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${
+              !isLogin
                 ? "border-sw-yellow bg-sw-yellow/10 text-sw-yellow shadow-[0_0_18px_rgba(255,232,31,0.12)]"
                 : "border-transparent text-gray-400 hover:text-gray-200"
-              }`}
+            }`}
           >
             Criar Conta
           </button>

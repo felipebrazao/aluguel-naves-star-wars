@@ -1,8 +1,16 @@
 export type SpaceshipStatus = 'disponivel' | 'alugada' | 'manutencao' | 'desativada'
 
+export type RentalStatus = 'ativa' | 'concluida' | 'cancelada'
+
+export type PaymentStatus = 'pendente' | 'pago' | 'cancelado'
+
+export type PaymentMethodName = 'credito' | 'debito' | 'pix'
+
+export type RoleName = 'admin' | 'cliente'
+
 export interface User {
     id: number
-    swapiId: number
+    swapiId: number | null
     name: string
     email: string
     cpf: string
@@ -25,12 +33,12 @@ export interface Spaceship {
 
 export interface Planet {
     id: number
-    swapiId: number
+    swapiId: number | null
     name: string
     diameter?: number
     climate?: string
     terrain?: string
-    population: number
+    population?: number | null
     active: boolean
 }
 
@@ -39,7 +47,7 @@ export interface Rental {
     userId: number
     spaceshipId: number
     spaceshipName: string
-    status: string
+    status: RentalStatus
     pickupPlanetId: number
     pickupPlanetName: string
     returnPlanetId: number
@@ -57,9 +65,14 @@ export interface Payment {
     rentalId: number
     amount: number
     paymentMethod: string
-    status: string
+    status: PaymentStatus
     paidAt: string | null
     createdAt: string
+}
+
+export interface PaymentMethod {
+    id: number
+    name: PaymentMethodName
 }
 
 export interface CreateUserDTO {
@@ -84,6 +97,10 @@ export interface CreatePaymentDTO {
     paymentMethodId: number
 }
 
+export interface CreateSpaceshipStatusDTO {
+    status: SpaceshipStatus
+}
+
 export interface CreateSpaceshipDTO {
     name: string
     model: string
@@ -98,4 +115,22 @@ export interface CreatePlanetDTO {
     climate?: string
     terrain?: string
     population?: number
+}
+
+export interface ImportResult {
+    mensagem: string
+    totalNaves?: number
+    totalPlanetas?: number
+    totalUsuarios?: number
+}
+
+export interface ActiveToggleResult {
+    id: number
+    name: string
+    active: boolean
+}
+
+export interface LoginResponse {
+    token: string
+    user: User
 }
