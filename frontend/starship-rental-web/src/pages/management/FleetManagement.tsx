@@ -1,32 +1,21 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import PageHeader from '../../components/shared/PageHeader'
 import DataTable, { type DataTableColumn } from '../../components/shared/DataTable'
 import Modal from '../../components/shared/Modal'
 import PilledButton from '../../components/shared/PilledButton'
+import { useFetch } from '../../hooks/useFetch'
+import { spaceshipService } from '../../services/api'
+import type { Spaceship, SpaceshipStatus } from '../../types/api'
 
-type FleetStatus = 'DISPONIVEL' | 'MANUTENCAO' | 'DESATIVADA'
-
-type FleetShip = {
-    id: string
-    name: string
-    model: string
-    status: FleetStatus
-}
-
-const fleetShips: FleetShip[] = [
-    { id: 'fleet-001', name: 'Millennium Falcon', model: 'YT-1300', status: 'DISPONIVEL' },
-    { id: 'fleet-002', name: 'X-Wing Starfighter', model: 'T-65B', status: 'MANUTENCAO' },
-    { id: 'fleet-003', name: 'TIE Advanced x1', model: 'Experimental Interceptor', status: 'DESATIVADA' },
-]
-
-const fleetStatusStyles: Record<FleetStatus, string> = {
-    DISPONIVEL: 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green',
-    MANUTENCAO: 'border-windu-purple/40 bg-windu-purple/10 text-windu-purple',
-    DESATIVADA: 'border-sith-red/40 bg-sith-red/10 text-sith-red',
+const fleetStatusStyles: Record<SpaceshipStatus, string> = {
+    disponivel: 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green',
+    alugada: 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue',
+    manutencao: 'border-windu-purple/40 bg-windu-purple/10 text-windu-purple',
+    desativada: 'border-sith-red/40 bg-sith-red/10 text-sith-red',
 }
 
 type FleetStatusBadgeProps = {
-    readonly status: FleetStatus
+    readonly status: SpaceshipStatus
 }
 
 function FleetStatusBadge({ status }: FleetStatusBadgeProps) {
@@ -38,8 +27,8 @@ function FleetStatusBadge({ status }: FleetStatusBadgeProps) {
 }
 
 type ManageStatusButtonProps = {
-    readonly ship: FleetShip
-    readonly onManage: (ship: FleetShip) => void
+    readonly ship: Spaceship
+    readonly onManage: (ship: Spaceship) => void
 }
 
 function ManageStatusButton({ ship, onManage }: ManageStatusButtonProps) {
@@ -50,13 +39,13 @@ function ManageStatusButton({ ship, onManage }: ManageStatusButtonProps) {
     )
 }
 
-const renderFleetStatusCell: DataTableColumn<FleetShip>['accessor'] = (ship) => <FleetStatusBadge status={ship.status} />
+const renderFleetStatusCell: DataTableColumn<Spaceship>['accessor'] = (ship) => <FleetStatusBadge status={ship.status} />
 
-function createManageStatusAccessor(onManage: (ship: FleetShip) => void): DataTableColumn<FleetShip>['accessor'] {
+function createManageStatusAccessor(onManage: (ship: Spaceship) => void): DataTableColumn<Spaceship>['accessor'] {
     return (ship) => <ManageStatusButton ship={ship} onManage={onManage} />
 }
 
-function createFleetColumns(onManage: (ship: FleetShip) => void): DataTableColumn<FleetShip>[] {
+function createFleetColumns(onManage: (ship: Spaceship) => void): DataTableColumn<Spaceship>[] {
     return [
         { header: 'Nome da Nave', accessor: 'name' },
         { header: 'Modelo', accessor: 'model' },
@@ -72,17 +61,27 @@ function createFleetColumns(onManage: (ship: FleetShip) => void): DataTableColum
 }
 
 function FleetManagement() {
+    const { data: fetchedShips, loading } = useFetch(spaceshipService.getAll)
+    const [data, setData] = useState<Spaceship[]>([])
+    const [requestError, setRequestError] = useState<string | null>(null)
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
-    const [selectedShip, setSelectedShip] = useState<FleetShip | null>(null)
-    const [newStatus, setNewStatus] = useState<FleetStatus>('DISPONIVEL')
+    const [selectedShip, setSelectedShip] = useState<Spaceship | null>(null)
+    const [newStatus, setNewStatus] = useState<SpaceshipStatus>('manutencao')
     const [estimatedCost, setEstimatedCost] = useState('')
     const [repairDescription, setRepairDescription] = useState('')
 
-    const handleOpenStatusModal = (ship: FleetShip) => {
+    useEffect(() => {
+        if (fetchedShips) {
+            setData(fetchedShips)
+        }
+    }, [fetchedShips])
+
+    const handleOpenStatusModal = (ship: Spaceship) => {
         setSelectedShip(ship)
         setNewStatus(ship.status)
         setEstimatedCost('')
         setRepairDescription('')
+        setRequestError(null)
         setIsStatusModalOpen(true)
     }
 
@@ -91,14 +90,26 @@ function FleetManagement() {
     const handleCloseModal = () => {
         setIsStatusModalOpen(false)
         setSelectedShip(null)
-        setNewStatus('DISPONIVEL')
+        setNewStatus('manutencao')
         setEstimatedCost('')
         setRepairDescription('')
+        setRequestError(null)
     }
 
-    const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
         event.preventDefault()
-        handleCloseModal()
+
+        if (!selectedShip) {
+            return
+        }
+
+        try {
+            const updated = await spaceshipService.updateStatus(selectedShip.id, newStatus)
+            setData((prev) => prev.map((s) => (s.id === updated.id ? updated : s)))
+            handleCloseModal()
+        } catch (error) {
+            setRequestError(error instanceof Error ? error.message : 'Erro desconhecido')
+        }
     }
 
     const statusModalTitle = selectedShip ? `Gerir Status - ${selectedShip.name}` : 'Gerir Status'
@@ -116,7 +127,9 @@ function FleetManagement() {
                 }
             />
 
-            <DataTable columns={fleetColumns} data={fleetShips} rowKey="id" />
+            {loading ? <p className="text-sw-yellow">Carregando naves...</p> : null}
+
+            <DataTable columns={fleetColumns} data={data} rowKey="id" />
 
             <Modal
                 isOpen={isStatusModalOpen}
@@ -132,15 +145,14 @@ function FleetManagement() {
                             id="newStatus"
                             className="select select-bordered w-full bg-surface-light/30 text-gray-100"
                             value={newStatus}
-                            onChange={(event) => setNewStatus(event.target.value as FleetStatus)}
+                            onChange={(event) => setNewStatus(event.target.value as SpaceshipStatus)}
                         >
-                            <option value="DISPONIVEL">DISPONIVEL</option>
-                            <option value="MANUTENCAO">MANUTENCAO</option>
-                            <option value="DESATIVADA">DESATIVADA</option>
+                            <option value="manutencao">manutencao</option>
+                            <option value="desativada">desativada</option>
                         </select>
                     </div>
 
-                    {newStatus === 'MANUTENCAO' ? (
+                    {newStatus === 'manutencao' ? (
                         <div className="space-y-5 rounded-2xl border border-panel-border bg-surface-light/30 p-4">
                             <div className="form-control">
                                 <label htmlFor="estimatedCost" className="label">
@@ -169,6 +181,8 @@ function FleetManagement() {
                             </div>
                         </div>
                     ) : null}
+
+                    {requestError ? <p className="text-sith-red">{requestError}</p> : null}
 
                     <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                         <button

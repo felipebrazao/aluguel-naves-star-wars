@@ -1,80 +1,49 @@
 import PageHeader from '../components/shared/PageHeader'
 import DataTable, { type DataTableColumn } from '../components/shared/DataTable'
+import { useFetch } from '../hooks/useFetch'
+import { rentalService } from '../services/api'
+import type { Rental } from '../types/api'
 
-type RentalStatus = 'ATIVO' | 'EM_USO' | 'FINALIZADO' | 'CANCELADO'
-
-type Rental = {
-    id: string
+type DashboardRental = Rental & {
     customerName: string
-    spaceship: string
-    status: RentalStatus
-    date: string
-    total: number
 }
 
-const rentals: Rental[] = [
-    {
-        id: 'rental-001',
-        customerName: 'Luke Skywalker',
-        spaceship: 'X-Wing Starfighter',
-        status: 'ATIVO',
-        date: '17/05/2026',
-        total: 3200,
-    },
-    {
-        id: 'rental-002',
-        customerName: 'Han Solo',
-        spaceship: 'Millennium Falcon',
-        status: 'EM_USO',
-        date: '16/05/2026',
-        total: 4500,
-    },
-    {
-        id: 'rental-003',
-        customerName: 'Leia Organa',
-        spaceship: 'TIE Advanced x1',
-        status: 'FINALIZADO',
-        date: '12/05/2026',
-        total: 5100,
-    },
-    {
-        id: 'rental-004',
-        customerName: 'Lando Calrissian',
-        spaceship: 'Imperial Shuttle',
-        status: 'CANCELADO',
-        date: '10/05/2026',
-        total: 3900,
-    },
-]
-
-const statusStyles: Record<RentalStatus, string> = {
-    ATIVO: 'border-sw-yellow/40 bg-sw-yellow/10 text-sw-yellow',
-    EM_USO: 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue',
-    FINALIZADO: 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green',
-    CANCELADO: 'border-sith-red/40 bg-sith-red/10 text-sith-red',
+const statusStyles: Record<string, string> = {
+    ativa: 'border-sw-yellow/40 bg-sw-yellow/10 text-sw-yellow',
+    em_uso: 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue',
+    concluida: 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green',
+    cancelada: 'border-sith-red/40 bg-sith-red/10 text-sith-red',
 }
 
-const rentalColumns: DataTableColumn<Rental>[] = [
+const rentalColumns: DataTableColumn<DashboardRental>[] = [
     { header: 'Cliente', accessor: 'customerName' },
-    { header: 'Nave', accessor: 'spaceship' },
+    { header: 'Nave', accessor: 'spaceshipName' },
     {
         header: 'Status',
         accessor: (rental) => (
             <span
-                className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${statusStyles[rental.status]}`}
+                className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${statusStyles[rental.status] ?? 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue'}`}
             >
                 {rental.status}
             </span>
         ),
     },
-    { header: 'Data', accessor: 'date' },
+    { header: 'Data', accessor: 'createdAt' },
     {
         header: 'Total',
-        accessor: (rental) => <span className="font-semibold text-sw-yellow">Créditos {rental.total.toLocaleString('pt-BR')}</span>,
+        accessor: (rental) => <span className="font-semibold text-sw-yellow">Créditos {Number(rental.totalPrice).toLocaleString('pt-BR')}</span>,
     },
 ]
 
 function OperationsDashboard() {
+    const { data: rentals, loading, error } = useFetch(rentalService.findAll)
+
+    const dashboardRentals: DashboardRental[] = (rentals ?? []).map((rental) => ({
+        ...rental,
+        // Pendente: endpoint no backend
+        customerName: '—',
+    }))
+
     return (
         <section className="space-y-8">
             <PageHeader
@@ -83,7 +52,10 @@ function OperationsDashboard() {
                 description="Visão consolidada de todos os aluguéis do sistema."
             />
 
-            <DataTable columns={rentalColumns} data={rentals} rowKey="id" />
+            {loading ? <p className="text-sw-yellow">Carregando dashboard...</p> : null}
+            {error ? <p className="text-sith-red">{error}</p> : null}
+
+            <DataTable columns={rentalColumns} data={dashboardRentals} rowKey="id" />
         </section>
     )
 }

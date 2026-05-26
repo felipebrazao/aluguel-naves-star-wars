@@ -1,40 +1,20 @@
 import PageHeader from '../components/shared/PageHeader'
 import DataTable, { type DataTableColumn } from '../components/shared/DataTable'
+import { useFetch } from '../hooks/useFetch'
+import { rentalService } from '../services/api'
+import type { Rental } from '../types/api'
 
-type RentalStatus = 'ATIVO' | 'FINALIZADO'
-
-type Rental = {
-    id: string
-    spaceship: string
-    status: RentalStatus
-    price: number
-    date: string
+type MyRentalsProps = {
+    readonly userId: number
 }
 
-const rentals: Rental[] = [
-    {
-        id: 'rental-001',
-        spaceship: 'Millennium Falcon',
-        status: 'ATIVO',
-        price: 4500,
-        date: '17/05/2026',
-    },
-    {
-        id: 'rental-002',
-        spaceship: 'X-Wing Starfighter',
-        status: 'FINALIZADO',
-        price: 3200,
-        date: '12/05/2026',
-    },
-]
-
 const rentalColumns: DataTableColumn<Rental>[] = [
-    { header: 'Nave', accessor: 'spaceship' },
+    { header: 'Nave', accessor: 'spaceshipName' },
     {
         header: 'Status',
         accessor: (rental) => (
             <span
-                className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${rental.status === 'ATIVO'
+                className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${rental.status === 'ativa'
                     ? 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue'
                     : 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green'
                     }`}
@@ -43,14 +23,17 @@ const rentalColumns: DataTableColumn<Rental>[] = [
             </span>
         ),
     },
-    { header: 'Data', accessor: 'date' },
+    { header: 'Retirada Real', accessor: (rental) => rental.actualPickupDate ?? '—' },
+    { header: 'Devolução Real', accessor: (rental) => rental.actualReturnDate ?? '—' },
     {
         header: 'Valor',
-        accessor: (rental) => <span className="font-semibold text-sw-yellow">R$ {rental.price.toFixed(2)}</span>,
+        accessor: (rental) => <span className="font-semibold text-sw-yellow">R$ {Number(rental.totalPrice).toFixed(2)}</span>,
     },
 ]
 
-function MyRentals() {
+function MyRentals({ userId }: MyRentalsProps) {
+    const { data: rentals, loading, error } = useFetch(() => rentalService.getByUser(userId))
+
     return (
         <section className="space-y-8">
             <PageHeader
@@ -59,7 +42,10 @@ function MyRentals() {
                 description="Acompanhe o histórico das suas locações e o status de cada missão."
             />
 
-            <DataTable columns={rentalColumns} data={rentals} rowKey="id" />
+            {loading ? <p className="text-sw-yellow">Carregando aluguéis...</p> : null}
+            {error ? <p className="text-sith-red">{error}</p> : null}
+
+            <DataTable columns={rentalColumns} data={rentals ?? []} rowKey="id" />
         </section>
     )
 }
