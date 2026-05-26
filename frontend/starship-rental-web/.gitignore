@@ -28,6 +28,10 @@ Thumbs.db
 # IDEs and editors
 .vscode/
 .idea/
+
+# Playwright
+test-results/
+playwright-report/
 *.suo
 *.ntvs*
 *.njsproj
