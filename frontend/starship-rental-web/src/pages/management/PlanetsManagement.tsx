@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import PageHeader from '../../components/shared/PageHeader'
 import DataTable, { type DataTableColumn } from '../../components/shared/DataTable'
 import Modal from '../../components/shared/Modal'
@@ -104,7 +105,12 @@ function PlanetsManagement() {
     const planetModalTitle = selectedPlanet ? `Gerir Planeta - ${selectedPlanet.name}` : 'Gerir Planeta'
 
     return (
-        <section className="space-y-8">
+        <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-8"
+        >
             <PageHeader
                 overline="Operações"
                 title="Gestão de Planetas"
@@ -116,7 +122,13 @@ function PlanetsManagement() {
                 }
             />
 
-            <DataTable columns={planetColumns} data={planets} rowKey="id" />
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+            >
+                <DataTable columns={planetColumns} data={planets} rowKey="id" />
+            </motion.div>
 
             <Modal
                 isOpen={isPlanetModalOpen}
@@ -186,7 +198,7 @@ function PlanetsManagement() {
                     </div>
                 </form>
             </Modal>
-        </section>
+        </motion.section>
     )
 }
 

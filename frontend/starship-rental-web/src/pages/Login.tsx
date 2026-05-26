@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import PilledButton from "../components/shared/PilledButton";
+import AnimatedCard from "../components/ui/AnimatedCard";
 
 type LoginResponse = {
   token: string;
@@ -21,6 +23,29 @@ function Login() {
   const [name, setName] = useState("");
   const [cpf, setCpf] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, "");
+    const maxLength = 11;
+    const truncated = numbers.slice(0, maxLength);
+
+    let formatted = "";
+    for (let i = 0; i < truncated.length; i++) {
+      if (i === 3 || i === 6) {
+        formatted += ".";
+      } else if (i === 9) {
+        formatted += "-";
+      }
+      formatted += truncated[i];
+    }
+
+    return formatted;
+  };
+
+  const handleCpfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCPF(e.target.value);
+    setCpf(formatted);
+  };
 
   const extractErrorMessage = async (response: Response) => {
     const rawBody = await response.text();
@@ -143,7 +168,7 @@ function Login() {
           body: JSON.stringify({
             name,
             email,
-            cpf,
+            cpf: cpf.replace(/\D/g, ""),
             password,
             roleId: 2,
           }),
@@ -178,8 +203,13 @@ function Login() {
   };
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-space-black px-4 py-12">
-      <section className="w-full max-w-md rounded-3xl border border-panel-border bg-panel-dark p-8 shadow-[0_0_24px_rgba(0,0,0,0.35)]">
+    <motion.main
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="flex min-h-screen items-center justify-center bg-space-black px-4 py-12"
+    >
+      <AnimatedCard className="w-full max-w-md p-8" hover={false}>
         <div>
           <p className="text-xs uppercase tracking-[0.4em] text-rebel-blue">
             Autenticação
@@ -249,9 +279,10 @@ function Login() {
                 id="cpf"
                 type="text"
                 value={cpf}
-                onChange={(e) => setCpf(e.target.value)}
+                onChange={handleCpfChange}
                 className="input input-bordered w-full bg-black/30 text-gray-100 placeholder:text-gray-500"
                 placeholder="000.000.000-00"
+                maxLength={14}
               />
             </div>
           ) : null}
@@ -294,8 +325,8 @@ function Login() {
             {isLogin ? "Entrar" : "Criar Conta"}
           </PilledButton>
         </form>
-      </section>
-    </main>
+      </AnimatedCard>
+    </motion.main>
   );
 }
 

@@ -1,3 +1,4 @@
+import { motion } from 'framer-motion'
 import PageHeader from '../components/shared/PageHeader'
 import DataTable, { type DataTableColumn } from '../components/shared/DataTable'
 
@@ -76,15 +77,26 @@ const rentalColumns: DataTableColumn<Rental>[] = [
 
 function OperationsDashboard() {
     return (
-        <section className="space-y-8">
+        <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-8"
+        >
             <PageHeader
                 overline="Operações"
                 title="Dashboard Geral"
                 description="Visão consolidada de todos os aluguéis do sistema."
             />
 
-            <DataTable columns={rentalColumns} data={rentals} rowKey="id" />
-        </section>
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+            >
+                <DataTable columns={rentalColumns} data={rentals} rowKey="id" />
+            </motion.div>
+        </motion.section>
     )
 }
 

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { motion } from 'framer-motion'
 import PageHeader from '../../components/shared/PageHeader'
 import DataTable, { type DataTableColumn } from '../../components/shared/DataTable'
 import Modal from '../../components/shared/Modal'
@@ -104,7 +105,12 @@ function FleetManagement() {
     const statusModalTitle = selectedShip ? `Gerir Status - ${selectedShip.name}` : 'Gerir Status'
 
     return (
-        <section className="space-y-8">
+        <motion.section
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-8"
+        >
             <PageHeader
                 overline="Operações"
                 title="Gestão de Frota"
@@ -116,7 +122,13 @@ function FleetManagement() {
                 }
             />
 
-            <DataTable columns={fleetColumns} data={fleetShips} rowKey="id" />
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4 }}
+            >
+                <DataTable columns={fleetColumns} data={fleetShips} rowKey="id" />
+            </motion.div>
 
             <Modal
                 isOpen={isStatusModalOpen}
@@ -185,7 +197,7 @@ function FleetManagement() {
                     </div>
                 </form>
             </Modal>
-        </section>
+        </motion.section>
     )
 }
 

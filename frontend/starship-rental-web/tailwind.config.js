@@ -3,7 +3,6 @@ export default {
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
-    "./node_modules/flyonui/dist/js/*.js" // Lê os componentes JS do FlyonUI
   ],
   theme: {
     extend: {
@@ -23,8 +22,5 @@ export default {
       }
     },
   },
-  plugins: [
-    require("flyonui"), // Habilita os componentes visuais
-    require("flyonui/plugin") // Habilita a interatividade JavaScript (Modais, Dropdowns, etc)
-  ],
+  plugins: [],
 }

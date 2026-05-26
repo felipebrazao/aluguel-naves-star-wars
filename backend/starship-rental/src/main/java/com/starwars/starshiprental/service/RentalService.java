@@ -92,6 +92,12 @@ public class RentalService {
                 .toList();
     }
 
+    public List<RentalResponseDTO> findByUserId(Integer userId) {
+        return rentalRepository.findAllByUserId(userId).stream()
+                .map(RentalResponseDTO::new)
+                .toList();
+    }
+
     public RentalResponseDTO findById(Integer id) {
         Rental rental = rentalRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Aluguel não encontrado com id: " + id));

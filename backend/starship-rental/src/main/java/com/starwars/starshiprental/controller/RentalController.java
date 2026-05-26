@@ -30,6 +30,11 @@ public class RentalController {
         return ResponseEntity.ok(rentalService.findAll());
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<RentalResponseDTO>> findByUserId(@PathVariable Integer userId) {
+        return ResponseEntity.ok(rentalService.findByUserId(userId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<RentalResponseDTO> findById(@PathVariable Integer id) {
         return ResponseEntity.ok(rentalService.findById(id));

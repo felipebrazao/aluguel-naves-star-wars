@@ -1,48 +1,84 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import SpaceshipCard from '../components/SpaceshipCard'
 import PageHeader from '../components/shared/PageHeader'
 
-const ships = [
-    {
-        id: 'millennium-falcon',
-        name: 'Millennium Falcon',
-        model: 'YT-1300',
-        dailyPrice: 4500,
-        capacity: 6,
-        status: 'DISPONIVEL' as const,
-    },
-    {
-        id: 'x-wing-starfighter',
-        name: 'X-Wing Starfighter',
-        model: 'T-65B',
-        dailyPrice: 3200,
-        capacity: 1,
-        status: 'DISPONIVEL' as const,
-    },
-    {
-        id: 'tie-advanced',
-        name: 'TIE Advanced x1',
-        model: 'Experimental Interceptor',
-        dailyPrice: 5100,
-        capacity: 1,
-        status: 'MANUTENCAO' as const,
-    },
-]
+type Spaceship = {
+    id: number
+    name: string
+    model: string
+    dailyPrice: number
+    capacity: number
+    status: string
+}
 
 function Home() {
+    const [ships, setShips] = useState<Spaceship[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
     const [query, setQuery] = useState('')
     const [onlyAvailable, setOnlyAvailable] = useState(false)
+
+    useEffect(() => {
+        const fetchShips = async () => {
+            try {
+                setLoading(true)
+                const res = await fetch('http://localhost:8080/spaceships?active=true')
+                if (!res.ok) throw new Error('Erro ao carregar naves')
+                const data = await res.json()
+                setShips(data)
+            } catch (err) {
+                setError(err instanceof Error ? err.message : 'Erro ao carregar naves')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchShips()
+    }, [])
 
     const filteredShips = useMemo(() => {
         return ships.filter((ship) => {
             const matchesQuery = [ship.name, ship.model].some((value) =>
                 value.toLowerCase().includes(query.toLowerCase()),
             )
-            const matchesStatus = !onlyAvailable || ship.status === 'DISPONIVEL'
+            const matchesStatus = !onlyAvailable || ship.status === 'disponivel'
 
             return matchesQuery && matchesStatus
         })
-    }, [onlyAvailable, query])
+    }, [onlyAvailable, query, ships])
+
+    if (loading) {
+        return (
+            <section className="space-y-8">
+                <PageHeader
+                    isHero
+                    overline="Catálogo de Naves"
+                    title="Encontre sua próxima rota pelo hiperespaço"
+                    description="Carregando naves..."
+                />
+                <div className="flex items-center justify-center py-12">
+                    <p className="text-gray-400">Carregando...</p>
+                </div>
+            </section>
+        )
+    }
+
+    if (error) {
+        return (
+            <section className="space-y-8">
+                <PageHeader
+                    isHero
+                    overline="Catálogo de Naves"
+                    title="Erro"
+                    description="Ocorreu um erro ao carregar as naves."
+                />
+                <div className="rounded-3xl border border-panel-border bg-panel-dark p-8">
+                    <p className="text-red-400">{error}</p>
+                </div>
+            </section>
+        )
+    }
 
     return (
         <section className="space-y-8">
@@ -75,19 +111,30 @@ function Home() {
                 </div>
             </PageHeader>
 
-            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-                {filteredShips.map((ship) => (
-                    <SpaceshipCard
+            <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="grid gap-6 md:grid-cols-2 xl:grid-cols-3"
+            >
+                {filteredShips.map((ship, index) => (
+                    <motion.div
                         key={ship.id}
-                        id={ship.id}
-                        name={ship.name}
-                        model={ship.model}
-                        dailyPrice={ship.dailyPrice}
-                        capacity={ship.capacity}
-                        status={ship.status}
-                    />
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: index * 0.1 }}
+                    >
+                        <SpaceshipCard
+                            id={ship.id}
+                            name={ship.name}
+                            model={ship.model}
+                            dailyPrice={ship.dailyPrice}
+                            capacity={ship.capacity}
+                            status={ship.status}
+                        />
+                    </motion.div>
                 ))}
-            </div>
+            </motion.div>
         </section>
     )
 }
