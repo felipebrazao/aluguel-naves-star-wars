@@ -2,6 +2,7 @@ package com.starwars.starshiprental.service;
 
 import com.starwars.starshiprental.dto.SpaceshipRequestDTO;
 import com.starwars.starshiprental.dto.SpaceshipResponseDTO;
+import com.starwars.starshiprental.dto.SpaceshipStatusRequestDTO;
 import com.starwars.starshiprental.entity.Spaceship;
 import com.starwars.starshiprental.entity.SpaceshipStatus;
 import com.starwars.starshiprental.repository.SpaceshipRepository;
@@ -16,6 +17,7 @@ public class SpaceshipService {
 
     private static final BigDecimal PISO = new BigDecimal("100.00");
     private static final BigDecimal TETO = new BigDecimal("50000.00");
+    private static final String NOT_FOUND_MESSAGE = "Nave não encontrada com id: ";
 
     private final SpaceshipRepository spaceshipRepository;
     private final SpaceshipStatusRepository statusRepository;
@@ -61,13 +63,13 @@ public class SpaceshipService {
 
     public SpaceshipResponseDTO findById(Integer id) {
         Spaceship spaceship = spaceshipRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Nave não encontrada com id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE + id));
         return new SpaceshipResponseDTO(spaceship);
     }
 
     public SpaceshipResponseDTO update(Integer id, SpaceshipRequestDTO dto) {
         Spaceship spaceship = spaceshipRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Nave não encontrada com id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE + id));
 
         spaceship.setName(dto.getName());
         spaceship.setModel(dto.getModel());
@@ -79,9 +81,26 @@ public class SpaceshipService {
         return new SpaceshipResponseDTO(spaceshipRepository.save(spaceship));
     }
 
+    public SpaceshipResponseDTO updateStatus(Integer id, SpaceshipStatusRequestDTO dto) {
+        Spaceship spaceship = spaceshipRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE + id));
+
+        String requestedStatus = dto.getStatus();
+        if (!"manutencao".equals(requestedStatus) && !"desativada".equals(requestedStatus)) {
+            throw new IllegalStateException("Transição de status não permitida via painel administrativo.");
+        }
+
+        SpaceshipStatus status = statusRepository.findByName(requestedStatus)
+                .orElseThrow(() -> new IllegalArgumentException("Status não encontrado: " + requestedStatus));
+
+        spaceship.setStatus(status);
+
+        return new SpaceshipResponseDTO(spaceshipRepository.save(spaceship));
+    }
+
     public Spaceship toggleActive(Integer id) {
         Spaceship spaceship = spaceshipRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Nave não encontrada com id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(NOT_FOUND_MESSAGE + id));
 
         spaceship.setActive(!spaceship.getActive());
         return spaceshipRepository.save(spaceship);

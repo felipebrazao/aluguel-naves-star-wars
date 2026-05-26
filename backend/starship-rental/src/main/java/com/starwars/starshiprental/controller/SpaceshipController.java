@@ -2,6 +2,7 @@ package com.starwars.starshiprental.controller;
 
 import com.starwars.starshiprental.dto.SpaceshipRequestDTO;
 import com.starwars.starshiprental.dto.SpaceshipResponseDTO;
+import com.starwars.starshiprental.dto.SpaceshipStatusRequestDTO;
 import com.starwars.starshiprental.entity.Spaceship;
 import com.starwars.starshiprental.service.SpaceshipImportService;
 import com.starwars.starshiprental.service.SpaceshipService;
@@ -30,8 +31,7 @@ public class SpaceshipController {
         int total = importService.importSpaceships();
         return ResponseEntity.ok(Map.of(
                 "mensagem", "Importação concluída com sucesso!",
-                "totalNaves", total
-        ));
+                "totalNaves", total));
     }
 
     @PostMapping
@@ -52,8 +52,14 @@ public class SpaceshipController {
 
     @PutMapping("/{id}")
     public ResponseEntity<SpaceshipResponseDTO> update(@PathVariable Integer id,
-                                                       @Validated @RequestBody SpaceshipRequestDTO dto) {
+            @Validated @RequestBody SpaceshipRequestDTO dto) {
         return ResponseEntity.ok(spaceshipService.update(id, dto));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<SpaceshipResponseDTO> updateStatus(@PathVariable Integer id,
+            @Validated @RequestBody SpaceshipStatusRequestDTO dto) {
+        return ResponseEntity.ok(spaceshipService.updateStatus(id, dto));
     }
 
     @PatchMapping("/{id}/active")
@@ -62,7 +68,6 @@ public class SpaceshipController {
         return ResponseEntity.ok(Map.of(
                 "id", spaceship.getId(),
                 "name", spaceship.getName(),
-                "active", spaceship.getActive()
-        ));
+                "active", spaceship.getActive()));
     }
 }
