@@ -133,6 +133,7 @@ function UsersManagement() {
     }
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadUsers()
     }, [])
 
@@ -161,7 +162,6 @@ function UsersManagement() {
         setIsModalOpen(true)
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const userColumns = useMemo(() => createUserColumns(handleOpenModal), [])
 
     const handleCloseModal = () => {

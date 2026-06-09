@@ -124,6 +124,7 @@ function PlanetsManagement() {
     }
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadPlanets()
     }, [])
 
@@ -154,7 +155,6 @@ function PlanetsManagement() {
         setIsPlanetModalOpen(true)
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const planetColumns = useMemo(() => createPlanetColumns(handleOpenPlanetModal), [])
 
     const handleCloseModal = () => {

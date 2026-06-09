@@ -137,6 +137,7 @@ function FleetManagement() {
     }
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         loadFleet()
     }, [])
 
@@ -175,7 +176,6 @@ function FleetManagement() {
         setIsModalOpen(true)
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     const fleetColumns = useMemo(() => createFleetColumns(handleOpenModal), [])
 
     const handleCloseModal = () => {

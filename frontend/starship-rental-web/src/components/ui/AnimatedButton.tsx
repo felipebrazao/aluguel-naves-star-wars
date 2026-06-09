@@ -26,6 +26,7 @@ export default function AnimatedButton({ children, variant = 'primary', classNam
   const MotionComponent = motion(Component)
 
   return (
+    // eslint-disable-next-line
     <MotionComponent
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
