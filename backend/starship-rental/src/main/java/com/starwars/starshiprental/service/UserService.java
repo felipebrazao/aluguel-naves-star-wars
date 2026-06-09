@@ -6,6 +6,7 @@ import com.starwars.starshiprental.entity.Role;
 import com.starwars.starshiprental.entity.User;
 import com.starwars.starshiprental.repository.RoleRepository;
 import com.starwars.starshiprental.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -21,10 +22,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, RoleRepository roleRepository) {
+    public UserService(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UserResponseDTO create(UserRequestDTO dto) {
@@ -40,9 +43,7 @@ public class UserService {
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setCpf(dto.getCpf());
-        // Senha temporariamente armazenada sem hash até ativação completa do Spring
-        // Security.
-        user.setPasswordHash(dto.getPassword());
+        user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         user.setRole(role);
 
         return new UserResponseDTO(userRepository.save(user));
@@ -77,9 +78,7 @@ public class UserService {
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setCpf(dto.getCpf());
-        // Senha temporariamente armazenada sem hash até ativação completa do Spring
-        // Security.
-        user.setPasswordHash(dto.getPassword());
+        user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
         user.setRole(role);
 
         return new UserResponseDTO(userRepository.save(user));

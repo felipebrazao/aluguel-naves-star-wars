@@ -7,6 +7,7 @@ import com.starwars.starshiprental.service.UserImportService;
 import com.starwars.starshiprental.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,10 +24,12 @@ public class UserController {
 
     private final UserService userService;
     private final UserImportService userImportService;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserController(UserService userService, UserImportService userImportService) {
+    public UserController(UserService userService, UserImportService userImportService, PasswordEncoder passwordEncoder) {
         this.userService = userService;
         this.userImportService = userImportService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/import")
@@ -82,7 +85,7 @@ public class UserController {
         }
 
         User user = opt.get();
-        if (user.getPasswordHash() == null || !user.getPasswordHash().equals(password)) {
+        if (user.getPasswordHash() == null || !passwordEncoder.matches(password, user.getPasswordHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(ERROR_KEY, "Credenciais inválidas"));
         }
 
