@@ -1,6 +1,7 @@
 package com.starwars.starshiprental.integration.controller;
 
 import tools.jackson.databind.ObjectMapper;
+import com.starwars.starshiprental.config.TokenAuthInterceptor;
 import com.starwars.starshiprental.dto.UserRequestDTO;
 import com.starwars.starshiprental.entity.Role;
 import com.starwars.starshiprental.entity.User;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -19,11 +21,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @Transactional
 class UserControllerTest {
@@ -43,8 +47,12 @@ class UserControllerTest {
     private Role clientRole;
     private Role adminRole;
 
+    @MockitoBean
+    private TokenAuthInterceptor authInterceptor;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        when(authInterceptor.preHandle(any(), any(), any())).thenReturn(true);
         clientRole = getOrCreateRole("CLIENTE");
         adminRole = getOrCreateRole("ADMIN");
     }
