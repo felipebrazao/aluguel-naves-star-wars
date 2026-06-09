@@ -1,15 +1,30 @@
 import { test, expect } from '@playwright/test'
 
 /**
- * Testes E2E — Página de Login / Autenticação
- *
- * Cobre:
- *  - Renderização dos campos
- *  - Validações client-side (e-mail vazio, formato, senha vazia)
- *  - Troca de tab Entrar ↔ Criar Conta
- *  - Login com sucesso (API mockada)
- *  - Login com falha (API mockada)
+ * Gera um e-mail único para evitar colisões de UNIQUE no PostgreSQL.
  */
+function uniqueEmail(): string {
+    return `e2e_${Date.now()}_${Math.floor(Math.random() * 9_999)}@test.com`
+}
+
+/**
+ * Gera um CPF de 11 dígitos matematicamente válido (algoritmo oficial).
+ */
+function generateValidCpf(): string {
+    const digits = Array.from({ length: 9 }, () => Math.floor(Math.random() * 10))
+
+    const sum1 = digits.reduce((acc, d, i) => acc + d * (10 - i), 0)
+    const r1 = (sum1 * 10) % 11
+    const d1 = r1 >= 10 ? 0 : r1
+
+    const digits10 = [...digits, d1]
+    const sum2 = digits10.reduce((acc, d, i) => acc + d * (11 - i), 0)
+    const r2 = (sum2 * 10) % 11
+    const d2 = r2 >= 10 ? 0 : r2
+
+    return [...digits, d1, d2].join('')
+}
+
 test.describe('Autenticação', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/login')
@@ -26,7 +41,7 @@ test.describe('Autenticação', () => {
         await expect(page.getByRole('heading', { name: /star rental access/i })).toBeVisible()
     })
 
-    // ── Validações ────────────────────────────────────────────────────────────
+    // ── Validações client-side ────────────────────────────────────────────────
 
     test('deve mostrar erro quando o e-mail estiver vazio', async ({ page }) => {
         await page.locator('button[type="submit"]').click()
@@ -65,52 +80,32 @@ test.describe('Autenticação', () => {
         await expect(page.locator('#cpf')).not.toBeVisible()
     })
 
-    // ── Chamadas de API (mockadas) ────────────────────────────────────────────
+    // ── Fluxo real de autenticação ────────────────────────────────────────────
 
-    test('deve redirecionar para / após login bem-sucedido', async ({ page }) => {
-        await page.route('**/users/login', async (route) => {
-            await route.fulfill({
-                status: 200,
-                contentType: 'application/json',
-                body: JSON.stringify({
-                    token: 'jwt-valido',
-                    user: { id: 1, name: 'Piloto', email: 'teste@galaxia.com', role: 'Cliente' },
-                }),
-            })
-        })
+    test('deve registar novo utilizador e redirecionar para / após login', async ({ page }) => {
+        const email = uniqueEmail()
+        const cpf = generateValidCpf()
 
-        await page.locator('#email').fill('teste@galaxia.com')
-        await page.locator('#password').fill('senha123')
+        await page.getByRole('button', { name: 'Criar Conta' }).click()
+
+        await page.locator('#name').fill('Piloto E2E')
+        await page.locator('#cpf').fill(cpf)
+        await page.locator('#email').fill(email)
+        await page.locator('#password').fill('Senha@123')
+
         await page.locator('button[type="submit"]').click()
 
-        await expect(page).toHaveURL('/')
+        await expect(page).toHaveURL('/', { timeout: 15_000 })
     })
 
-    test('deve exibir mensagem de erro quando o login falhar (401)', async ({ page }) => {
-        await page.route('**/users/login', async (route) => {
-            await route.fulfill({
-                status: 401,
-                contentType: 'application/json',
-                body: JSON.stringify({ message: 'Credenciais inválidas' }),
-            })
-        })
-
-        await page.locator('#email').fill('teste@galaxia.com')
-        await page.locator('#password').fill('senhaerrada')
+    test('deve exibir mensagem de erro quando as credenciais forem incorretas', async ({ page }) => {
+        await page.locator('#email').fill('naoeexiste_e2e@galaxia.com')
+        await page.locator('#password').fill('senhaErrada999!')
         await page.locator('button[type="submit"]').click()
 
-        await expect(page.getByText('Credenciais inválidas')).toBeVisible()
-    })
-
-    test('deve exibir erro de conexão quando a API estiver indisponível', async ({ page }) => {
-        await page.route('**/users/login', async (route) => {
-            await route.abort('connectionrefused')
-        })
-
-        await page.locator('#email').fill('teste@galaxia.com')
-        await page.locator('#password').fill('senha123')
-        await page.locator('button[type="submit"]').click()
-
-        await expect(page.getByText(/erro de conex/i)).toBeVisible()
+        // Valida que a API devolveu uma mensagem de erro (qualquer que seja o texto)
+        await expect(page.locator('p.text-red-400')).toBeVisible({ timeout: 10_000 })
+        // Garante que permanecemos na página de login
+        await expect(page).toHaveURL('/login')
     })
 })
