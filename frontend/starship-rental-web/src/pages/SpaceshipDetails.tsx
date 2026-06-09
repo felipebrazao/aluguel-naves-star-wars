@@ -8,7 +8,9 @@ import PageHeader from '../components/shared/PageHeader'
 import AnimatedModal from '../components/ui/AnimatedModal'
 import AnimatedButton from '../components/ui/AnimatedButton'
 import AnimatedCard from '../components/ui/AnimatedCard'
+import PilledButton from '../components/shared/PilledButton'
 import { apiFetch } from '../services/api'
+import { formatCredits } from '../utils/formatters'
 import type {
     AuthUser,
     PaymentMethod,
@@ -78,7 +80,7 @@ function SpaceshipDetails() {
         startDate && endDate
             ? Math.max(0, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
             : 0
-    const totalPrice = spaceship ? totalDays * spaceship.dailyPrice : 0
+    const totalPrice = spaceship ? totalDays * Number(spaceship.dailyPrice) : 0
 
     const isSubmitDisabled = !startDate || !endDate || !pickupPlanetId || !returnPlanetId || !paymentMethodId || totalDays <= 0 || submitting
 
@@ -190,7 +192,7 @@ function SpaceshipDetails() {
                 <AnimatedCard className="md:col-span-2 p-8" hover={false}>
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <p className="text-xs uppercase tracking-[0.35em] text-jedi-blue">Ficha Técnica</p>
+                            <p className="text-xs uppercase tracking-[0.35em] text-text-secondary">Ficha Técnica</p>
                             <h3 className="mt-3 text-2xl font-semibold text-sw-yellow">Visão geral da nave</h3>
                         </div>
 
@@ -202,18 +204,18 @@ function SpaceshipDetails() {
                     <div className="mt-8 rounded-2xl border border-panel-border/80 bg-surface-light/30 p-6">
                         <div className="grid gap-6 sm:grid-cols-2">
                             <div>
-                                <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue">Fabricante</p>
+                                <p className="text-xs uppercase tracking-[0.3em] text-text-secondary">Fabricante</p>
                                 <p className="mt-2 text-lg font-semibold text-gray-100">{spaceship.manufacturer}</p>
                             </div>
 
                             <div>
-                                <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue">Capacidade</p>
+                                <p className="text-xs uppercase tracking-[0.3em] text-text-secondary">Capacidade</p>
                                 <p className="mt-2 text-lg font-semibold text-gray-100">{spaceship.capacity} tripulante</p>
                             </div>
 
                             <div className="sm:col-span-2">
-                                <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue">Preço da Diária</p>
-                                <p className="mt-2 text-3xl font-semibold text-sw-yellow">R$ {spaceship.dailyPrice.toFixed(2)}</p>
+                                <p className="text-xs uppercase tracking-[0.3em] text-text-secondary">Preço da Diária</p>
+                                <p className="mt-2 text-3xl font-semibold text-sw-yellow">R$ {formatCredits(spaceship.dailyPrice)}</p>
                             </div>
                         </div>
                     </div>
@@ -221,7 +223,7 @@ function SpaceshipDetails() {
 
                 <AnimatedCard className="md:col-span-1 p-8" hover={false}>
                     <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-jedi-blue">Checkout</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-text-secondary">Checkout</p>
                         <h3 className="mt-3 text-2xl font-semibold text-sw-yellow">Consola de Reserva</h3>
                         <p className="mt-4 text-sm leading-6 text-gray-300">
                             Defina as datas e as localidades para calcular o valor total do aluguel.
@@ -230,7 +232,7 @@ function SpaceshipDetails() {
 
                     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                         <div className="space-y-2">
-                            <label htmlFor="startDate" className="block text-xs uppercase tracking-[0.25em] text-jedi-blue font-semibold">
+                            <label htmlFor="startDate" className="block text-xs uppercase tracking-[0.25em] text-text-secondary font-semibold">
                                 Data de Início
                             </label>
                             <DatePicker
@@ -245,7 +247,7 @@ function SpaceshipDetails() {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="endDate" className="block text-xs uppercase tracking-[0.25em] text-jedi-blue font-semibold">
+                            <label htmlFor="endDate" className="block text-xs uppercase tracking-[0.25em] text-text-secondary font-semibold">
                                 Data de Fim
                             </label>
                             <DatePicker
@@ -260,7 +262,7 @@ function SpaceshipDetails() {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="pickupPlanet" className="block text-xs uppercase tracking-[0.25em] text-jedi-blue font-semibold">
+                            <label htmlFor="pickupPlanet" className="block text-xs uppercase tracking-[0.25em] text-text-secondary font-semibold">
                                 Planeta de Retirada
                             </label>
                             <select
@@ -279,7 +281,7 @@ function SpaceshipDetails() {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="returnPlanet" className="block text-xs uppercase tracking-[0.25em] text-jedi-blue font-semibold">
+                            <label htmlFor="returnPlanet" className="block text-xs uppercase tracking-[0.25em] text-text-secondary font-semibold">
                                 Planeta de Devolução
                             </label>
                             <select
@@ -298,7 +300,7 @@ function SpaceshipDetails() {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="paymentMethod" className="block text-xs uppercase tracking-[0.25em] text-jedi-blue font-semibold">
+                            <label htmlFor="paymentMethod" className="block text-xs uppercase tracking-[0.25em] text-text-secondary font-semibold">
                                 Método de Pagamento
                             </label>
                             <select
@@ -319,8 +321,8 @@ function SpaceshipDetails() {
                         <div className="h-px bg-gradient-to-r from-transparent via-panel-border to-transparent" />
 
                         <div className="rounded-2xl border border-jedi-blue/30 bg-gradient-to-br from-jedi-blue/10 to-transparent p-6">
-                            <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue font-semibold">Valor Total</p>
-                            <p className="mt-3 text-4xl font-bold text-sw-yellow">R$ {totalPrice.toFixed(2)}</p>
+                            <p className="text-xs uppercase tracking-[0.3em] text-text-secondary font-semibold">Valor Total</p>
+                            <p className="mt-3 text-4xl font-bold text-sw-yellow">R$ {formatCredits(totalPrice)}</p>
                             <p className="mt-2 text-sm text-gray-400">{totalDays > 0 ? `${totalDays} dia(s) de aluguel` : 'Selecione as datas para calcular'}</p>
                         </div>
 
@@ -366,13 +368,13 @@ function SpaceshipDetails() {
                         <div className="divider border-panel-border my-2" />
                         <div className="flex justify-between">
                             <span className="text-sw-yellow font-semibold">Valor Total:</span>
-                            <span className="text-sw-yellow font-semibold text-lg">R$ {totalPrice.toFixed(2)}</span>
+                            <span className="text-sw-yellow font-semibold text-lg">R$ {formatCredits(totalPrice)}</span>
                         </div>
                     </div>
                 </div>
                 <div className="flex gap-3">
                     <AnimatedButton
-                        variant="secondary"
+                        variant="ghost-yellow"
                         className="flex-1"
                         onClick={() => setShowConfirmModal(false)}
                     >

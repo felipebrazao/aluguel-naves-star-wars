@@ -40,7 +40,7 @@ describe('OperationsDashboard', () => {
                     endDate: '2026-05-03T10:00:00',
                     actualPickupDate: null,
                     actualReturnDate: null,
-                    totalPrice: 4500,
+                    totalPrice: '4500',
                     createdAt: '2026-05-01T09:00:00',
                 },
             ]) as unknown as Response,

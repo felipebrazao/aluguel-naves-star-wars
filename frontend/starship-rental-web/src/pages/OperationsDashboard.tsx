@@ -5,6 +5,7 @@ import DataTable, { type DataTableColumn } from '../components/shared/DataTable'
 import AnimatedCard from '../components/ui/AnimatedCard'
 import { apiFetch } from '../services/api'
 import type { RentalResponseDTO } from '../types/entities'
+import { formatCredits } from '../utils/formatters'
 
 type DashboardRental = {
     id: number
@@ -12,7 +13,7 @@ type DashboardRental = {
     spaceship: string
     status: string
     date: string
-    total: number
+    total: string
 }
 
 const statusStyles: Record<string, string> = {
@@ -34,7 +35,7 @@ const renderDashboardStatusCell: DataTableColumn<DashboardRental>['accessor'] = 
 }
 
 const renderDashboardTotalCell: DataTableColumn<DashboardRental>['accessor'] = (rental) => (
-    <span className="font-semibold text-sw-yellow">Créditos {rental.total.toLocaleString('pt-BR')}</span>
+    <span className="font-semibold text-sw-yellow">Créditos {formatCredits(rental.total)}</span>
 )
 
 const rentalColumns: DataTableColumn<DashboardRental>[] = [

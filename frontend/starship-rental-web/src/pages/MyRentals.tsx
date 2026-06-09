@@ -6,6 +6,7 @@ import OutlineButton from '../components/shared/OutlineButton'
 import AnimatedCard from '../components/ui/AnimatedCard'
 import { apiFetch } from '../services/api'
 import type { AuthUser, RentalResponseDTO } from '../types/entities'
+import { formatCredits } from '../utils/formatters'
 
 const STATUS_BADGE_CLASS_MAP: Record<string, string> = {
     ativa: 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue',
@@ -33,7 +34,7 @@ const renderRentalStartDateCell: DataTableColumn<RentalResponseDTO>['accessor'] 
 const renderRentalEndDateCell: DataTableColumn<RentalResponseDTO>['accessor'] = (rental) => formatRentalDate(rental.endDate)
 
 const renderRentalPriceCell: DataTableColumn<RentalResponseDTO>['accessor'] = (rental) => (
-    <span className="font-semibold text-sw-yellow">R$ {rental.totalPrice.toFixed(2)}</span>
+    <span className="font-semibold text-sw-yellow">R$ {formatCredits(rental.totalPrice)}</span>
 )
 
 function createRentalActionsAccessor(

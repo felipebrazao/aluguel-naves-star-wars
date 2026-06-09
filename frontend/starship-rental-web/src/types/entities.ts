@@ -26,9 +26,9 @@ export type SpaceshipResponseDTO = {
     name: string
     model: string
     manufacturer: string
-    costInCredits: number | null
+    costInCredits: string | null
     capacity: number
-    dailyPrice: number
+    dailyPrice: string
     status: string
     active: boolean
 }
@@ -64,7 +64,17 @@ export type RentalResponseDTO = {
     endDate: string
     actualPickupDate: string | null
     actualReturnDate: string | null
-    totalPrice: number
+    totalPrice: string
+    createdAt: string
+}
+
+export type PaymentResponseDTO = {
+    id: number
+    rentalId: number
+    status: string
+    amount: string
+    paymentMethod: string
+    paidAt: string | null
     createdAt: string
 }
 
