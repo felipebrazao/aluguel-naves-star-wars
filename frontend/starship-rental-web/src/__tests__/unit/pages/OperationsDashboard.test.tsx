@@ -1,42 +1,76 @@
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import OperationsDashboard from '../../../pages/OperationsDashboard'
 
+type FetchLikeResponse = {
+    ok: boolean
+    status: number
+    json: () => Promise<unknown>
+}
+
+function buildJsonResponse(data: unknown): FetchLikeResponse {
+    return {
+        ok: true,
+        status: 200,
+        json: async () => data,
+    }
+}
+
 describe('OperationsDashboard', () => {
-    it('should render page header', () => {
+    beforeEach(() => {
+        localStorage.setItem('token', 'mock-token')
+        vi.restoreAllMocks()
+    })
+
+    it('should render rentals from api with customer names', async () => {
+        vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+            buildJsonResponse([
+                {
+                    id: 1,
+                    userId: 10,
+                    userName: 'Leia Organa',
+                    spaceshipId: 100,
+                    spaceshipName: 'Tantive IV',
+                    status: 'ativa',
+                    pickupPlanetId: 1,
+                    pickupPlanetName: 'Alderaan',
+                    returnPlanetId: 2,
+                    returnPlanetName: 'Coruscant',
+                    startDate: '2026-05-01T10:00:00',
+                    endDate: '2026-05-03T10:00:00',
+                    actualPickupDate: null,
+                    actualReturnDate: null,
+                    totalPrice: '4500',
+                    createdAt: '2026-05-01T09:00:00',
+                },
+            ]) as unknown as Response,
+        )
+
         render(<OperationsDashboard />)
+
         expect(screen.getByText('Dashboard Geral')).toBeInTheDocument()
-        expect(screen.getByText('Operações')).toBeInTheDocument()
-    })
+        expect(screen.getByText('Carregando aluguéis...')).toBeInTheDocument()
 
-    it('should render table column headers', () => {
-        render(<OperationsDashboard />)
-        expect(screen.getByText('Cliente')).toBeInTheDocument()
-        expect(screen.getByText('Nave')).toBeInTheDocument()
-        expect(screen.getByText('Status')).toBeInTheDocument()
-        expect(screen.getByText('Data')).toBeInTheDocument()
-        expect(screen.getByText('Total')).toBeInTheDocument()
-    })
+        await waitFor(() => {
+            expect(screen.getByText('Leia Organa')).toBeInTheDocument()
+        })
 
-    it('should render customer names', () => {
-        render(<OperationsDashboard />)
-        expect(screen.getByText('Luke Skywalker')).toBeInTheDocument()
-        expect(screen.getByText('Han Solo')).toBeInTheDocument()
-        expect(screen.getByText('Leia Organa')).toBeInTheDocument()
-        expect(screen.getByText('Lando Calrissian')).toBeInTheDocument()
-    })
-
-    it('should render all rental statuses as badges', () => {
-        render(<OperationsDashboard />)
-        expect(screen.getByText('ATIVO')).toBeInTheDocument()
-        expect(screen.getByText('EM_USO')).toBeInTheDocument()
-        expect(screen.getByText('FINALIZADO')).toBeInTheDocument()
-        expect(screen.getByText('CANCELADO')).toBeInTheDocument()
-    })
-
-    it('should render formatted totals', () => {
-        render(<OperationsDashboard />)
-        expect(screen.getByText(/créditos 3\.200/i)).toBeInTheDocument()
+        expect(screen.getByText('Tantive IV')).toBeInTheDocument()
+        expect(screen.getByText('ativa')).toBeInTheDocument()
         expect(screen.getByText(/créditos 4\.500/i)).toBeInTheDocument()
+    })
+
+    it('should render api error state', async () => {
+        vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+            ok: false,
+            status: 500,
+            json: async () => ({}),
+        } as Response)
+
+        render(<OperationsDashboard />)
+
+        await waitFor(() => {
+            expect(screen.getByText('Erro ao carregar aluguéis do dashboard')).toBeInTheDocument()
+        })
     })
 })

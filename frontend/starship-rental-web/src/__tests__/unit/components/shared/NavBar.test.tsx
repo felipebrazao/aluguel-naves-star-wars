@@ -25,6 +25,8 @@ describe('NavBar', () => {
         expect(screen.getAllByText('Meus Aluguéis').length).toBeGreaterThanOrEqual(1)
         expect(screen.getAllByText('Operações').length).toBeGreaterThanOrEqual(1)
         expect(screen.getAllByText('Gestão').length).toBeGreaterThanOrEqual(1)
+        expect(screen.getAllByText('Utilizadores').length).toBeGreaterThanOrEqual(1)
+        expect(screen.getAllByText('Pagamentos').length).toBeGreaterThanOrEqual(1)
     })
 
     it('should render R2-D2 logo image', () => {

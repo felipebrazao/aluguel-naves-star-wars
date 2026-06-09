@@ -3,20 +3,50 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import PilledButton from "../components/shared/PilledButton";
 import AnimatedCard from "../components/ui/AnimatedCard";
+import { apiFetch } from "../services/api";
+import type { LoginResponse } from "../types/entities";
 
-type LoginResponse = {
-  token: string;
-  user: {
-    id: number;
-    name: string;
-    email: string;
-    role: string;
-  };
-};
+function isValidEmail(email: string): boolean {
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailPattern.test(email);
+}
+
+function validateAuthInput(params: {
+  email: string;
+  password: string;
+  isRegisterMode: boolean;
+  name: string;
+  cpf: string;
+}): string | null {
+  const { email, password, isRegisterMode, name, cpf } = params;
+
+  if (!email.trim()) {
+    return "E-mail é obrigatório";
+  }
+
+  if (!isValidEmail(email)) {
+    return "E-mail inválido";
+  }
+
+  if (!password.trim()) {
+    return "Senha é obrigatória";
+  }
+
+  if (isRegisterMode && !name.trim()) {
+    return "Nome é obrigatório";
+  }
+
+  if (isRegisterMode && !cpf.trim()) {
+    return "CPF é obrigatório";
+  }
+
+  return null;
+}
 
 function Login() {
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
+  const isRegister = isLogin === false;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -107,96 +137,88 @@ function Login() {
 
   useEffect(() => {
     if (localStorage.getItem("token")) {
-      window.location.replace("/");
+      globalThis.location.replace("/");
     }
   }, [navigate]);
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const authenticate = async (email: string, password: string) => {
+    const loginResponse = await apiFetch("/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    }, { auth: false });
+
+    if (loginResponse.status !== 200) {
+      throw new Error("Falha ao autenticar após o cadastro");
+    }
+
+    const loginData: LoginResponse = await loginResponse.json();
+    localStorage.setItem("token", loginData.token);
+    localStorage.setItem("user", JSON.stringify(loginData.user));
+    navigate("/", { replace: true });
+  };
+
+  const register = async (params: { name: string; email: string; cpf: string; password: string }) => {
+    const registerResponse = await apiFetch("/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: params.name,
+        email: params.email,
+        cpf: params.cpf.replace(/\D/g, ""),
+        password: params.password,
+        roleId: 2,
+      }),
+    }, { auth: false });
+
+    if (!registerResponse.ok) {
+      throw new Error(await extractErrorMessage(registerResponse));
+    }
+
+    await registerResponse.json();
+  };
+
+  const handleLoginOnly = async (email: string, password: string) => {
+    const res = await apiFetch("/users/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    }, { auth: false });
+
+    if (!res.ok) {
+      throw new Error(await extractErrorMessage(res));
+    }
+
+    const data: LoginResponse = await res.json();
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    globalThis.location.replace("/");
+  };
+
+  const handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
 
-    if (!email.trim()) {
-      setError("E-mail é obrigatório");
+    const validationError = validateAuthInput({
+      email,
+      password,
+      isRegisterMode: isRegister,
+      name,
+      cpf,
+    });
+    if (validationError) {
+      setError(validationError);
       return;
     }
-
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email)) {
-      setError("E-mail inválido");
-      return;
-    }
-
-    if (!password.trim()) {
-      setError("Senha é obrigatória");
-      return;
-    }
-
-    if (!isLogin) {
-      if (!name.trim()) {
-        setError("Nome é obrigatório");
-        return;
-      }
-
-      if (!cpf.trim()) {
-        setError("CPF é obrigatório");
-        return;
-      }
-    }
-
-    const authenticate = async () => {
-      const loginResponse = await fetch("http://localhost:8080/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (loginResponse.status !== 200) {
-        throw new Error("Falha ao autenticar após o cadastro");
-      }
-
-      const loginData: LoginResponse = await loginResponse.json();
-      localStorage.setItem("token", loginData.token);
-      localStorage.setItem("user", JSON.stringify(loginData.user));
-      navigate("/", { replace: true });
-    };
 
     try {
-      if (!isLogin) {
-        const registerResponse = await fetch("http://localhost:8080/users", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            email,
-            cpf: cpf.replace(/\D/g, ""),
-            password,
-            roleId: 2,
-          }),
-        });
-
-        if (!registerResponse.ok) {
-          throw new Error(await extractErrorMessage(registerResponse));
-        }
-
-        await registerResponse.json();
-        await authenticate();
+      if (isRegister) {
+        await register({ name, email, cpf, password });
+        await authenticate(email, password);
         return;
       }
 
-      const res = await fetch("http://localhost:8080/users/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (res.ok) {
-        const data: LoginResponse = await res.json();
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        window.location.replace("/");
-      } else {
-        throw new Error(await extractErrorMessage(res));
-      }
+      await handleLoginOnly(email, password);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erro de conexão");
     }
@@ -211,7 +233,7 @@ function Login() {
     >
       <AnimatedCard className="w-full max-w-md p-8" hover={false}>
         <div>
-          <p className="text-xs uppercase tracking-[0.4em] text-rebel-blue">
+          <p className="text-xs uppercase tracking-[0.4em] text-text-secondary">
             Autenticação
           </p>
           <h1 className="mt-3 text-3xl font-semibold text-sw-yellow">
@@ -227,11 +249,10 @@ function Login() {
           <button
             type="button"
             onClick={() => setIsLogin(true)}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${
-              isLogin
-                ? "border-sw-yellow bg-sw-yellow/10 text-sw-yellow shadow-[0_0_18px_rgba(255,232,31,0.12)]"
-                : "border-transparent text-gray-400 hover:text-gray-200"
-            }`}
+            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${isLogin
+              ? "border-sw-yellow bg-sw-yellow/10 text-sw-yellow shadow-[0_0_18px_rgba(255,232,31,0.12)]"
+              : "border-transparent text-gray-400 hover:text-gray-200"
+              }`}
           >
             Entrar
           </button>
@@ -239,21 +260,20 @@ function Login() {
           <button
             type="button"
             onClick={() => setIsLogin(false)}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${
-              !isLogin
-                ? "border-sw-yellow bg-sw-yellow/10 text-sw-yellow shadow-[0_0_18px_rgba(255,232,31,0.12)]"
-                : "border-transparent text-gray-400 hover:text-gray-200"
-            }`}
+            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition-all duration-200 ${isRegister
+              ? "border-sw-yellow bg-sw-yellow/10 text-sw-yellow shadow-[0_0_18px_rgba(255,232,31,0.12)]"
+              : "border-transparent text-gray-400 hover:text-gray-200"
+              }`}
           >
             Criar Conta
           </button>
         </div>
 
         <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
-          {!isLogin ? (
+          {isRegister ? (
             <div className="form-control">
               <label htmlFor="name" className="label">
-                <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">
+                <span className="label-text text-xs uppercase tracking-[0.25em] text-text-secondary">
                   Nome
                 </span>
               </label>
@@ -268,10 +288,10 @@ function Login() {
             </div>
           ) : null}
 
-          {!isLogin ? (
+          {isRegister ? (
             <div className="form-control">
               <label htmlFor="cpf" className="label">
-                <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">
+                <span className="label-text text-xs uppercase tracking-[0.25em] text-text-secondary">
                   CPF
                 </span>
               </label>
@@ -289,7 +309,7 @@ function Login() {
 
           <div className="form-control">
             <label htmlFor="email" className="label">
-              <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">
+              <span className="label-text text-xs uppercase tracking-[0.25em] text-text-secondary">
                 E-mail
               </span>
             </label>
@@ -305,7 +325,7 @@ function Login() {
 
           <div className="form-control">
             <label htmlFor="password" className="label">
-              <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">
+              <span className="label-text text-xs uppercase tracking-[0.25em] text-text-secondary">
                 Senha
               </span>
             </label>

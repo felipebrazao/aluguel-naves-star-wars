@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 @Getter
 @Setter
@@ -23,12 +23,11 @@ public class RentalRequestDTO {
     private Integer returnPlanetId;
 
     @NotNull(message = "Data de início é obrigatória")
-    private LocalDateTime startDate;
+    private OffsetDateTime startDate;
 
     @NotNull(message = "Data de fim é obrigatória")
-    private LocalDateTime endDate;
+    private OffsetDateTime endDate;
 
     @NotNull(message = "Método de pagamento é obrigatório")
     private Integer paymentMethodId;
 }
-

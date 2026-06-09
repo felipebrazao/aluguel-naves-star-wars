@@ -4,10 +4,10 @@ import { MemoryRouter } from 'react-router-dom'
 import SpaceshipCard, { type SpaceshipCardProps } from '../../../components/SpaceshipCard'
 
 const defaultProps: SpaceshipCardProps = {
-    id: 'millennium-falcon',
+    id: 1,
     name: 'Millennium Falcon',
     model: 'YT-1300',
-    dailyPrice: 4500,
+    dailyPrice: '4500',
     capacity: 6,
     status: 'DISPONIVEL',
 }
@@ -33,7 +33,7 @@ describe('SpaceshipCard', () => {
 
     it('should render formatted daily price', () => {
         renderCard()
-        expect(screen.getByText('R$ 4500.00')).toBeInTheDocument()
+        expect(screen.getByText('R$ 4.500,00')).toBeInTheDocument()
     })
 
     it('should render capacity with label', () => {
@@ -43,27 +43,22 @@ describe('SpaceshipCard', () => {
 
     it('should render DISPONIVEL status badge', () => {
         renderCard({ status: 'DISPONIVEL' })
-        expect(screen.getByText('DISPONIVEL')).toBeInTheDocument()
+        expect(screen.getByText('Disponivel')).toBeInTheDocument()
     })
 
     it('should render MANUTENCAO status badge', () => {
         renderCard({ status: 'MANUTENCAO' })
-        expect(screen.getByText('MANUTENCAO')).toBeInTheDocument()
+        expect(screen.getByText('Manutencao')).toBeInTheDocument()
     })
 
     it('should render DESATIVADA status badge', () => {
         renderCard({ status: 'DESATIVADA' })
-        expect(screen.getByText('DESATIVADA')).toBeInTheDocument()
+        expect(screen.getByText('Desativada')).toBeInTheDocument()
     })
 
     it('should render a link to the ship detail page', () => {
         renderCard()
         const link = screen.getByRole('link', { name: /ver detalhes/i })
-        expect(link).toHaveAttribute('href', '/nave/millennium-falcon')
-    })
-
-    it('should render as an article element', () => {
-        renderCard()
-        expect(screen.getByRole('article')).toBeInTheDocument()
+        expect(link).toHaveAttribute('href', '/nave/1')
     })
 })

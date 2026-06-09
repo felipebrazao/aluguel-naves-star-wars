@@ -2,18 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import SpaceshipCard from '../components/SpaceshipCard'
 import PageHeader from '../components/shared/PageHeader'
-
-type Spaceship = {
-    id: number
-    name: string
-    model: string
-    dailyPrice: number
-    capacity: number
-    status: string
-}
+import { apiFetch } from '../services/api'
+import type { SpaceshipResponseDTO } from '../types/entities'
 
 function Home() {
-    const [ships, setShips] = useState<Spaceship[]>([])
+    const [ships, setShips] = useState<SpaceshipResponseDTO[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [query, setQuery] = useState('')
@@ -23,9 +16,9 @@ function Home() {
         const fetchShips = async () => {
             try {
                 setLoading(true)
-                const res = await fetch('http://localhost:8080/spaceships?active=true')
+                const res = await apiFetch('/spaceships?active=true')
                 if (!res.ok) throw new Error('Erro ao carregar naves')
-                const data = await res.json()
+                const data: SpaceshipResponseDTO[] = await res.json()
                 setShips(data)
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Erro ao carregar naves')
@@ -42,7 +35,7 @@ function Home() {
             const matchesQuery = [ship.name, ship.model].some((value) =>
                 value.toLowerCase().includes(query.toLowerCase()),
             )
-            const matchesStatus = !onlyAvailable || ship.status === 'disponivel'
+            const matchesStatus = !onlyAvailable || ship.status.toLowerCase() === 'disponivel'
 
             return matchesQuery && matchesStatus
         })

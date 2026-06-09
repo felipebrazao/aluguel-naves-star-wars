@@ -1,6 +1,7 @@
 package com.starwars.starshiprental.integration.controller;
 
 import tools.jackson.databind.ObjectMapper;
+import com.starwars.starshiprental.config.TokenAuthInterceptor;
 import com.starwars.starshiprental.dto.RentalRequestDTO;
 import com.starwars.starshiprental.entity.*;
 import com.starwars.starshiprental.repository.*;
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -18,16 +20,22 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @Transactional
 class RentalControllerTest {
+
+    private static final String AUTH_HEADER = "Authorization";
+    private static final String AUTH_TOKEN = "Bearer test-token";
 
     @Autowired
     private MockMvc mockMvc;
@@ -65,8 +73,12 @@ class RentalControllerTest {
     private Planet returnPlanet;
     private PaymentMethod paymentMethod;
 
+    @MockitoBean
+    private TokenAuthInterceptor authInterceptor;
+
     @BeforeEach
-    void setUp() {
+    void setUp() throws Exception {
+        when(authInterceptor.preHandle(any(), any(), any())).thenReturn(true);
         disponivelStatus = getOrCreateSpaceshipStatus("disponivel");
         alugadaStatus = getOrCreateSpaceshipStatus("alugada");
 
@@ -101,13 +113,14 @@ class RentalControllerTest {
             requestDTO.setSpaceshipId(spaceship.getId());
             requestDTO.setPickupPlanetId(pickupPlanet.getId());
             requestDTO.setReturnPlanetId(returnPlanet.getId());
-            requestDTO.setStartDate(LocalDateTime.now().plusDays(1));
-            requestDTO.setEndDate(LocalDateTime.now().plusDays(5));
+            requestDTO.setStartDate(OffsetDateTime.now().plusDays(1));
+            requestDTO.setEndDate(OffsetDateTime.now().plusDays(5));
             requestDTO.setPaymentMethodId(paymentMethod.getId());
 
             mockMvc.perform(post("/rentals")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .header(AUTH_HEADER, AUTH_TOKEN)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id").exists())
                     .andExpect(jsonPath("$.userId").value(1))
@@ -126,13 +139,14 @@ class RentalControllerTest {
             requestDTO.setSpaceshipId(spaceship.getId());
             requestDTO.setPickupPlanetId(pickupPlanet.getId());
             requestDTO.setReturnPlanetId(returnPlanet.getId());
-            requestDTO.setStartDate(LocalDateTime.now().plusDays(1));
-            requestDTO.setEndDate(LocalDateTime.now().plusDays(5));
+            requestDTO.setStartDate(OffsetDateTime.now().plusDays(1));
+            requestDTO.setEndDate(OffsetDateTime.now().plusDays(5));
             requestDTO.setPaymentMethodId(paymentMethod.getId());
 
             mockMvc.perform(post("/rentals")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .header(AUTH_HEADER, AUTH_TOKEN)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").value(containsString("Nave não está disponível")));
         }
@@ -147,13 +161,14 @@ class RentalControllerTest {
             requestDTO.setSpaceshipId(spaceship.getId());
             requestDTO.setPickupPlanetId(pickupPlanet.getId());
             requestDTO.setReturnPlanetId(returnPlanet.getId());
-            requestDTO.setStartDate(LocalDateTime.now().plusDays(5));
-            requestDTO.setEndDate(LocalDateTime.now().plusDays(1));
+            requestDTO.setStartDate(OffsetDateTime.now().plusDays(5));
+            requestDTO.setEndDate(OffsetDateTime.now().plusDays(1));
             requestDTO.setPaymentMethodId(paymentMethod.getId());
 
             mockMvc.perform(post("/rentals")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .header(AUTH_HEADER, AUTH_TOKEN)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.message").value(containsString("Data de fim deve ser posterior")));
         }
@@ -166,13 +181,14 @@ class RentalControllerTest {
             requestDTO.setSpaceshipId(99999);
             requestDTO.setPickupPlanetId(pickupPlanet.getId());
             requestDTO.setReturnPlanetId(returnPlanet.getId());
-            requestDTO.setStartDate(LocalDateTime.now().plusDays(1));
-            requestDTO.setEndDate(LocalDateTime.now().plusDays(5));
+            requestDTO.setStartDate(OffsetDateTime.now().plusDays(1));
+            requestDTO.setEndDate(OffsetDateTime.now().plusDays(5));
             requestDTO.setPaymentMethodId(paymentMethod.getId());
 
             mockMvc.perform(post("/rentals")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(requestDTO)))
+                    .header(AUTH_HEADER, AUTH_TOKEN)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(requestDTO)))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message").value(containsString("Nave não encontrada")));
         }
@@ -188,7 +204,8 @@ class RentalControllerTest {
             Spaceship spaceship = createAvailableSpaceship("Falcon");
             createRental(spaceship, ativaStatus);
 
-            mockMvc.perform(get("/rentals"))
+            mockMvc.perform(get("/rentals")
+                    .header(AUTH_HEADER, AUTH_TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$").isArray())
                     .andExpect(jsonPath("$", hasSize(greaterThanOrEqualTo(1))));
@@ -205,7 +222,8 @@ class RentalControllerTest {
             Spaceship spaceship = createAvailableSpaceship("Falcon");
             Rental rental = createRental(spaceship, ativaStatus);
 
-            mockMvc.perform(get("/rentals/{id}", rental.getId()))
+            mockMvc.perform(get("/rentals/{id}", rental.getId())
+                    .header(AUTH_HEADER, AUTH_TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(rental.getId()))
                     .andExpect(jsonPath("$.status").value("ativa"));
@@ -214,7 +232,8 @@ class RentalControllerTest {
         @Test
         @DisplayName("Should return 404 when rental not found")
         void shouldReturn404WhenRentalNotFound() throws Exception {
-            mockMvc.perform(get("/rentals/{id}", 99999))
+            mockMvc.perform(get("/rentals/{id}", 99999)
+                    .header(AUTH_HEADER, AUTH_TOKEN))
                     .andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.message").value(containsString("Aluguel não encontrado")));
         }
@@ -230,7 +249,8 @@ class RentalControllerTest {
             Spaceship spaceship = createRentedSpaceship("Falcon");
             Rental rental = createRental(spaceship, ativaStatus);
 
-            mockMvc.perform(patch("/rentals/{id}/conclude", rental.getId()))
+            mockMvc.perform(patch("/rentals/{id}/conclude", rental.getId())
+                    .header(AUTH_HEADER, AUTH_TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(rental.getId()))
                     .andExpect(jsonPath("$.status").value("concluida"))
@@ -243,9 +263,11 @@ class RentalControllerTest {
             Spaceship spaceship = createRentedSpaceship("Falcon");
             Rental rental = createRental(spaceship, concluidaStatus);
 
-            mockMvc.perform(patch("/rentals/{id}/conclude", rental.getId()))
+            mockMvc.perform(patch("/rentals/{id}/conclude", rental.getId())
+                    .header(AUTH_HEADER, AUTH_TOKEN))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.message").value(containsString("Apenas alugueis ativos podem ser concluídos")));
+                    .andExpect(
+                            jsonPath("$.message").value(containsString("Apenas alugueis ativos podem ser concluídos")));
         }
     }
 
@@ -259,7 +281,8 @@ class RentalControllerTest {
             Spaceship spaceship = createRentedSpaceship("Falcon");
             Rental rental = createRental(spaceship, ativaStatus);
 
-            mockMvc.perform(patch("/rentals/{id}/cancel", rental.getId()))
+            mockMvc.perform(patch("/rentals/{id}/cancel", rental.getId())
+                    .header(AUTH_HEADER, AUTH_TOKEN))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(rental.getId()))
                     .andExpect(jsonPath("$.status").value("cancelada"));
@@ -271,9 +294,11 @@ class RentalControllerTest {
             Spaceship spaceship = createRentedSpaceship("Falcon");
             Rental rental = createRental(spaceship, canceladaStatus);
 
-            mockMvc.perform(patch("/rentals/{id}/cancel", rental.getId()))
+            mockMvc.perform(patch("/rentals/{id}/cancel", rental.getId())
+                    .header(AUTH_HEADER, AUTH_TOKEN))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.message").value(containsString("Apenas alugueis ativos podem ser cancelados")));
+                    .andExpect(
+                            jsonPath("$.message").value(containsString("Apenas alugueis ativos podem ser cancelados")));
         }
     }
 

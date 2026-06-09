@@ -8,33 +8,25 @@ import PageHeader from '../components/shared/PageHeader'
 import AnimatedModal from '../components/ui/AnimatedModal'
 import AnimatedButton from '../components/ui/AnimatedButton'
 import AnimatedCard from '../components/ui/AnimatedCard'
+import { apiFetch } from '../services/api'
+import { formatCredits } from '../utils/formatters'
+import type {
+    AuthUser,
+    PaymentMethod,
+    PlanetResponseDTO,
+    RentalRequestDTO,
+    SpaceshipResponseDTO,
+} from '../types/entities'
 
-type Spaceship = {
-    id: number
-    name: string
-    model: string
-    manufacturer: string
-    capacity: number
-    dailyPrice: number
-    status: string
-}
-
-type Planet = {
-    id: number
-    name: string
-}
-
-type PaymentMethod = {
-    id: number
-    name: string
-}
+const EXPLOSION_PARTICLE_ANGLES = [0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330] as const
+const EXPLOSION_SECOND_WAVE_ANGLES = [15, 60, 105, 150, 195, 240, 285, 330] as const
 
 function SpaceshipDetails() {
     const { id } = useParams<{ id: string }>()
     const navigate = useNavigate()
 
-    const [spaceship, setSpaceship] = useState<Spaceship | null>(null)
-    const [planets, setPlanets] = useState<Planet[]>([])
+    const [spaceship, setSpaceship] = useState<SpaceshipResponseDTO | null>(null)
+    const [planets, setPlanets] = useState<PlanetResponseDTO[]>([])
     const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -53,18 +45,18 @@ function SpaceshipDetails() {
             try {
                 setLoading(true)
                 const [spaceshipRes, planetsRes, paymentMethodsRes] = await Promise.all([
-                    fetch(`http://localhost:8080/spaceships/${id}`),
-                    fetch('http://localhost:8080/planets?active=true'),
-                    fetch('http://localhost:8080/payment-methods'),
+                    apiFetch(`/spaceships/${id}`),
+                    apiFetch('/planets?active=true'),
+                    apiFetch('/payment-methods'),
                 ])
 
                 if (!spaceshipRes.ok) throw new Error('Erro ao carregar nave')
                 if (!planetsRes.ok) throw new Error('Erro ao carregar planetas')
                 if (!paymentMethodsRes.ok) throw new Error('Erro ao carregar métodos de pagamento')
 
-                const spaceshipData = await spaceshipRes.json()
-                const planetsData = await planetsRes.json()
-                const paymentMethodsData = await paymentMethodsRes.json()
+                const spaceshipData: SpaceshipResponseDTO = await spaceshipRes.json()
+                const planetsData: PlanetResponseDTO[] = await planetsRes.json()
+                const paymentMethodsData: PaymentMethod[] = await paymentMethodsRes.json()
 
                 console.log('Planets loaded:', planetsData)
                 console.log('Payment methods loaded:', paymentMethodsData)
@@ -87,11 +79,11 @@ function SpaceshipDetails() {
         startDate && endDate
             ? Math.max(0, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
             : 0
-    const totalPrice = spaceship ? totalDays * spaceship.dailyPrice : 0
+    const totalPrice = spaceship ? totalDays * Number(spaceship.dailyPrice) : 0
 
     const isSubmitDisabled = !startDate || !endDate || !pickupPlanetId || !returnPlanetId || !paymentMethodId || totalDays <= 0 || submitting
 
-    const handleSubmit = async (event: React.FormEvent) => {
+    const handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
         event.preventDefault()
         setShowConfirmModal(true)
     }
@@ -106,19 +98,25 @@ function SpaceshipDetails() {
             if (!userStr) {
                 throw new Error('Usuário não autenticado')
             }
-            const user = JSON.parse(userStr)
+            if (!spaceship) {
+                throw new Error('Nave não encontrada')
+            }
+            if (!startDate || !endDate) {
+                throw new Error('Datas inválidas para aluguel')
+            }
+            const user: AuthUser = JSON.parse(userStr)
 
-            const rentalData = {
+            const rentalData: RentalRequestDTO = {
                 userId: user.id,
-                spaceshipId: spaceship?.id,
-                pickupPlanetId: parseInt(pickupPlanetId),
-                returnPlanetId: parseInt(returnPlanetId),
-                paymentMethodId: parseInt(paymentMethodId),
-                startDate: startDate?.toISOString(),
-                endDate: endDate?.toISOString(),
+                spaceshipId: spaceship.id,
+                pickupPlanetId: Number.parseInt(pickupPlanetId),
+                returnPlanetId: Number.parseInt(returnPlanetId),
+                paymentMethodId: Number.parseInt(paymentMethodId),
+                startDate: startDate.toISOString(),
+                endDate: endDate.toISOString(),
             }
 
-            const res = await fetch('http://localhost:8080/rentals', {
+            const res = await apiFetch('/rentals', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(rentalData),
@@ -131,7 +129,7 @@ function SpaceshipDetails() {
 
             setSubmitting(false)
             setShowSuccessExplosion(true)
-            
+
             setTimeout(() => {
                 navigate('/meus-alugueis')
             }, 2000)
@@ -193,7 +191,7 @@ function SpaceshipDetails() {
                 <AnimatedCard className="md:col-span-2 p-8" hover={false}>
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <p className="text-xs uppercase tracking-[0.35em] text-jedi-blue">Ficha Técnica</p>
+                            <p className="text-xs uppercase tracking-[0.35em] text-text-secondary">Ficha Técnica</p>
                             <h3 className="mt-3 text-2xl font-semibold text-sw-yellow">Visão geral da nave</h3>
                         </div>
 
@@ -205,18 +203,18 @@ function SpaceshipDetails() {
                     <div className="mt-8 rounded-2xl border border-panel-border/80 bg-surface-light/30 p-6">
                         <div className="grid gap-6 sm:grid-cols-2">
                             <div>
-                                <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue">Fabricante</p>
+                                <p className="text-xs uppercase tracking-[0.3em] text-text-secondary">Fabricante</p>
                                 <p className="mt-2 text-lg font-semibold text-gray-100">{spaceship.manufacturer}</p>
                             </div>
 
                             <div>
-                                <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue">Capacidade</p>
+                                <p className="text-xs uppercase tracking-[0.3em] text-text-secondary">Capacidade</p>
                                 <p className="mt-2 text-lg font-semibold text-gray-100">{spaceship.capacity} tripulante</p>
                             </div>
 
                             <div className="sm:col-span-2">
-                                <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue">Preço da Diária</p>
-                                <p className="mt-2 text-3xl font-semibold text-sw-yellow">R$ {spaceship.dailyPrice.toFixed(2)}</p>
+                                <p className="text-xs uppercase tracking-[0.3em] text-text-secondary">Preço da Diária</p>
+                                <p className="mt-2 text-3xl font-semibold text-sw-yellow">R$ {formatCredits(spaceship.dailyPrice)}</p>
                             </div>
                         </div>
                     </div>
@@ -224,7 +222,7 @@ function SpaceshipDetails() {
 
                 <AnimatedCard className="md:col-span-1 p-8" hover={false}>
                     <div>
-                        <p className="text-xs uppercase tracking-[0.35em] text-jedi-blue">Checkout</p>
+                        <p className="text-xs uppercase tracking-[0.35em] text-text-secondary">Checkout</p>
                         <h3 className="mt-3 text-2xl font-semibold text-sw-yellow">Consola de Reserva</h3>
                         <p className="mt-4 text-sm leading-6 text-gray-300">
                             Defina as datas e as localidades para calcular o valor total do aluguel.
@@ -233,13 +231,13 @@ function SpaceshipDetails() {
 
                     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                         <div className="space-y-2">
-                            <label htmlFor="startDate" className="block text-xs uppercase tracking-[0.25em] text-jedi-blue font-semibold">
+                            <label htmlFor="startDate" className="block text-xs uppercase tracking-[0.25em] text-text-secondary font-semibold">
                                 Data de Início
                             </label>
                             <DatePicker
                                 id="startDate"
                                 selected={startDate}
-                                onChange={(date) => setStartDate(date)}
+                                onChange={(date: Date | null) => setStartDate(date)}
                                 className="w-full rounded-xl border border-panel-border bg-surface-light/30 px-4 py-3 text-gray-100 transition-all duration-200 focus:border-jedi-blue focus:outline-none focus:ring-2 focus:ring-jedi-blue/20"
                                 dateFormat="dd/MM/yyyy"
                                 placeholderText="Selecione a data"
@@ -248,13 +246,13 @@ function SpaceshipDetails() {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="endDate" className="block text-xs uppercase tracking-[0.25em] text-jedi-blue font-semibold">
+                            <label htmlFor="endDate" className="block text-xs uppercase tracking-[0.25em] text-text-secondary font-semibold">
                                 Data de Fim
                             </label>
                             <DatePicker
                                 id="endDate"
                                 selected={endDate}
-                                onChange={(date) => setEndDate(date)}
+                                onChange={(date: Date | null) => setEndDate(date)}
                                 className="w-full rounded-xl border border-panel-border bg-surface-light/30 px-4 py-3 text-gray-100 transition-all duration-200 focus:border-jedi-blue focus:outline-none focus:ring-2 focus:ring-jedi-blue/20"
                                 dateFormat="dd/MM/yyyy"
                                 placeholderText="Selecione a data"
@@ -263,7 +261,7 @@ function SpaceshipDetails() {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="pickupPlanet" className="block text-xs uppercase tracking-[0.25em] text-jedi-blue font-semibold">
+                            <label htmlFor="pickupPlanet" className="block text-xs uppercase tracking-[0.25em] text-text-secondary font-semibold">
                                 Planeta de Retirada
                             </label>
                             <select
@@ -282,7 +280,7 @@ function SpaceshipDetails() {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="returnPlanet" className="block text-xs uppercase tracking-[0.25em] text-jedi-blue font-semibold">
+                            <label htmlFor="returnPlanet" className="block text-xs uppercase tracking-[0.25em] text-text-secondary font-semibold">
                                 Planeta de Devolução
                             </label>
                             <select
@@ -301,7 +299,7 @@ function SpaceshipDetails() {
                         </div>
 
                         <div className="space-y-2">
-                            <label htmlFor="paymentMethod" className="block text-xs uppercase tracking-[0.25em] text-jedi-blue font-semibold">
+                            <label htmlFor="paymentMethod" className="block text-xs uppercase tracking-[0.25em] text-text-secondary font-semibold">
                                 Método de Pagamento
                             </label>
                             <select
@@ -322,8 +320,8 @@ function SpaceshipDetails() {
                         <div className="h-px bg-gradient-to-r from-transparent via-panel-border to-transparent" />
 
                         <div className="rounded-2xl border border-jedi-blue/30 bg-gradient-to-br from-jedi-blue/10 to-transparent p-6">
-                            <p className="text-xs uppercase tracking-[0.3em] text-jedi-blue font-semibold">Valor Total</p>
-                            <p className="mt-3 text-4xl font-bold text-sw-yellow">R$ {totalPrice.toFixed(2)}</p>
+                            <p className="text-xs uppercase tracking-[0.3em] text-text-secondary font-semibold">Valor Total</p>
+                            <p className="mt-3 text-4xl font-bold text-sw-yellow">R$ {formatCredits(totalPrice)}</p>
                             <p className="mt-2 text-sm text-gray-400">{totalDays > 0 ? `${totalDays} dia(s) de aluguel` : 'Selecione as datas para calcular'}</p>
                         </div>
 
@@ -369,13 +367,13 @@ function SpaceshipDetails() {
                         <div className="divider border-panel-border my-2" />
                         <div className="flex justify-between">
                             <span className="text-sw-yellow font-semibold">Valor Total:</span>
-                            <span className="text-sw-yellow font-semibold text-lg">R$ {totalPrice.toFixed(2)}</span>
+                            <span className="text-sw-yellow font-semibold text-lg">R$ {formatCredits(totalPrice)}</span>
                         </div>
                     </div>
                 </div>
                 <div className="flex gap-3">
                     <AnimatedButton
-                        variant="secondary"
+                        variant="ghost-yellow"
                         className="flex-1"
                         onClick={() => setShowConfirmModal(false)}
                     >
@@ -416,33 +414,33 @@ function SpaceshipDetails() {
                             >
                                 <div className="h-32 w-32 rounded-full bg-sw-yellow shadow-[0_0_60px_rgba(255,232,31,0.8)]" />
                             </motion.div>
-                            
+
                             {/* Partículas explosão */}
-                            {[...Array(12)].map((_, i) => (
+                            {EXPLOSION_PARTICLE_ANGLES.map((angle) => (
                                 <motion.div
-                                    key={i}
+                                    key={`p-${angle}`}
                                     initial={{ scale: 0, opacity: 1 }}
-                                    animate={{ 
+                                    animate={{
                                         scale: [0, 2, 0],
                                         opacity: [1, 1, 0],
-                                        x: Math.cos((i * 30) * Math.PI / 180) * 150,
-                                        y: Math.sin((i * 30) * Math.PI / 180) * 150
+                                        x: Math.cos((angle * Math.PI) / 180) * 150,
+                                        y: Math.sin((angle * Math.PI) / 180) * 150,
                                     }}
                                     transition={{ duration: 0.8, ease: 'easeOut' }}
                                     className="absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full bg-sw-yellow"
                                 />
                             ))}
-                            
+
                             {/* Segunda onda de partículas */}
-                            {[...Array(8)].map((_, i) => (
+                            {EXPLOSION_SECOND_WAVE_ANGLES.map((angle) => (
                                 <motion.div
-                                    key={`wave2-${i}`}
+                                    key={`w2-${angle}`}
                                     initial={{ scale: 0, opacity: 1 }}
-                                    animate={{ 
+                                    animate={{
                                         scale: [0, 1.5, 0],
                                         opacity: [1, 0.8, 0],
-                                        x: Math.cos((i * 45 + 15) * Math.PI / 180) * 100,
-                                        y: Math.sin((i * 45 + 15) * Math.PI / 180) * 100
+                                        x: Math.cos((angle * Math.PI) / 180) * 100,
+                                        y: Math.sin((angle * Math.PI) / 180) * 100,
                                     }}
                                     transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
                                     className="absolute left-1/2 top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-jedi-blue"

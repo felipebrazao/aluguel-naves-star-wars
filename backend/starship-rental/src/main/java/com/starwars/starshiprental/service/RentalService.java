@@ -8,143 +8,187 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class RentalService {
 
-    private final RentalRepository rentalRepository;
-    private final RentalStatusRepository rentalStatusRepository;
-    private final SpaceshipRepository spaceshipRepository;
-    private final SpaceshipStatusRepository spaceshipStatusRepository;
-    private final PlanetRepository planetRepository;
-    private final PaymentMethodRepository paymentMethodRepository;
-    private final PaymentService paymentService;
+        private static final String STATUS_DISPONIVEL = "disponivel";
+        private static final String STATUS_ATIVA = "ativa";
+        private static final String RENTAL_NOT_FOUND_PREFIX = "Aluguel não encontrado com id: ";
 
-    public RentalService(RentalRepository rentalRepository,
-                         RentalStatusRepository rentalStatusRepository,
-                         SpaceshipRepository spaceshipRepository,
-                         SpaceshipStatusRepository spaceshipStatusRepository,
-                         PlanetRepository planetRepository,
-                         PaymentMethodRepository paymentMethodRepository,
-                         @Lazy PaymentService paymentService) {
-        this.rentalRepository = rentalRepository;
-        this.rentalStatusRepository = rentalStatusRepository;
-        this.spaceshipRepository = spaceshipRepository;
-        this.spaceshipStatusRepository = spaceshipStatusRepository;
-        this.planetRepository = planetRepository;
-        this.paymentMethodRepository = paymentMethodRepository;
-        this.paymentService = paymentService;
-    }
+        private final RentalRepository rentalRepository;
+        private final RentalStatusRepository rentalStatusRepository;
+        private final SpaceshipRepository spaceshipRepository;
+        private final SpaceshipStatusRepository spaceshipStatusRepository;
+        private final PlanetRepository planetRepository;
+        private final PaymentMethodRepository paymentMethodRepository;
+        private final UserRepository userRepository;
+        private final PaymentService paymentService;
 
-    public RentalResponseDTO create(RentalRequestDTO dto) {
-        Spaceship spaceship = spaceshipRepository.findById(dto.getSpaceshipId())
-                .orElseThrow(() -> new IllegalArgumentException("Nave não encontrada com id: " + dto.getSpaceshipId()));
-
-        if (!spaceship.getStatus().getName().equals("disponivel")) {
-            throw new IllegalStateException("Nave não está disponível para aluguel");
+        public RentalService(RentalRepository rentalRepository,
+                        RentalStatusRepository rentalStatusRepository,
+                        SpaceshipRepository spaceshipRepository,
+                        SpaceshipStatusRepository spaceshipStatusRepository,
+                        PlanetRepository planetRepository,
+                        PaymentMethodRepository paymentMethodRepository,
+                        UserRepository userRepository,
+                        @Lazy PaymentService paymentService) {
+                this.rentalRepository = rentalRepository;
+                this.rentalStatusRepository = rentalStatusRepository;
+                this.spaceshipRepository = spaceshipRepository;
+                this.spaceshipStatusRepository = spaceshipStatusRepository;
+                this.planetRepository = planetRepository;
+                this.paymentMethodRepository = paymentMethodRepository;
+                this.userRepository = userRepository;
+                this.paymentService = paymentService;
         }
 
-        Planet pickupPlanet = planetRepository.findById(dto.getPickupPlanetId())
-                .orElseThrow(() -> new IllegalArgumentException("Planeta de retirada não encontrado com id: " + dto.getPickupPlanetId()));
+        public RentalResponseDTO create(RentalRequestDTO dto) {
+                LocalDateTime startDate = dto.getStartDate().toLocalDateTime();
+                LocalDateTime endDate = dto.getEndDate().toLocalDateTime();
 
-        Planet returnPlanet = planetRepository.findById(dto.getReturnPlanetId())
-                .orElseThrow(() -> new IllegalArgumentException("Planeta de devolução não encontrado com id: " + dto.getReturnPlanetId()));
+                Spaceship spaceship = spaceshipRepository.findById(dto.getSpaceshipId())
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                "Nave não encontrada com id: " + dto.getSpaceshipId()));
 
-        long days = ChronoUnit.DAYS.between(dto.getStartDate(), dto.getEndDate());
-        if (days <= 0) throw new IllegalStateException("Data de fim deve ser posterior à data de início");
+                if (!spaceship.getStatus().getName().equals(STATUS_DISPONIVEL)) {
+                        throw new IllegalStateException("Nave não está disponível para aluguel");
+                }
 
-        RentalStatus status = rentalStatusRepository.findByName("ativa")
-                .orElseThrow(() -> new IllegalStateException("Status 'ativa' não encontrado"));
+                Planet pickupPlanet = planetRepository.findById(dto.getPickupPlanetId())
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                "Planeta de retirada não encontrado com id: "
+                                                                + dto.getPickupPlanetId()));
 
-        BigDecimal totalPrice = spaceship.getDailyPrice().multiply(BigDecimal.valueOf(days));
+                Planet returnPlanet = planetRepository.findById(dto.getReturnPlanetId())
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                "Planeta de devolução não encontrado com id: "
+                                                                + dto.getReturnPlanetId()));
 
-        Rental rental = new Rental();
-        rental.setUserId(dto.getUserId());
-        rental.setSpaceship(spaceship);
-        rental.setStatus(status);
-        rental.setPickupPlanet(pickupPlanet);
-        rental.setReturnPlanet(returnPlanet);
-        rental.setStartDate(dto.getStartDate());
-        rental.setEndDate(dto.getEndDate());
-        rental.setTotalPrice(totalPrice);
+                long days = ChronoUnit.DAYS.between(startDate, endDate);
+                if (days <= 0)
+                        throw new IllegalStateException("Data de fim deve ser posterior à data de início");
 
-        // Muda status da nave para 'alugada'
-        SpaceshipStatus alugada = spaceshipStatusRepository.findByName("alugada")
-                .orElseThrow(() -> new IllegalStateException("Status 'alugada' não encontrado"));
-        spaceship.setStatus(alugada);
-        spaceshipRepository.save(spaceship);
+                RentalStatus status = rentalStatusRepository.findByName(STATUS_ATIVA)
+                                .orElseThrow(() -> statusNotFound(STATUS_ATIVA));
 
-        Rental saved = rentalRepository.save(rental);
+                BigDecimal totalPrice = spaceship.getDailyPrice().multiply(BigDecimal.valueOf(days));
 
-        // Cria payment pendente automaticamente
-        PaymentMethod paymentMethod = paymentMethodRepository.findById(dto.getPaymentMethodId())
-                .orElseThrow(() -> new IllegalArgumentException("Método de pagamento não encontrado com id: " + dto.getPaymentMethodId()));
-        paymentService.createPending(saved, paymentMethod);
+                Rental rental = new Rental();
+                rental.setUserId(dto.getUserId());
+                rental.setSpaceship(spaceship);
+                rental.setStatus(status);
+                rental.setPickupPlanet(pickupPlanet);
+                rental.setReturnPlanet(returnPlanet);
+                rental.setStartDate(startDate);
+                rental.setEndDate(endDate);
+                rental.setTotalPrice(totalPrice);
 
-        return new RentalResponseDTO(saved);
-    }
+                // Muda status da nave para 'alugada'
+                SpaceshipStatus alugada = spaceshipStatusRepository.findByName("alugada")
+                                .orElseThrow(() -> statusNotFound("alugada"));
+                spaceship.setStatus(alugada);
+                spaceshipRepository.save(spaceship);
 
-    public List<RentalResponseDTO> findAll() {
-        return rentalRepository.findAll().stream()
-                .map(RentalResponseDTO::new)
-                .toList();
-    }
+                Rental saved = rentalRepository.save(rental);
 
-    public List<RentalResponseDTO> findByUserId(Integer userId) {
-        return rentalRepository.findAllByUserId(userId).stream()
-                .map(RentalResponseDTO::new)
-                .toList();
-    }
+                // Cria payment pendente automaticamente
+                PaymentMethod paymentMethod = paymentMethodRepository.findById(dto.getPaymentMethodId())
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                "Método de pagamento não encontrado com id: "
+                                                                + dto.getPaymentMethodId()));
+                paymentService.createPending(saved, paymentMethod);
 
-    public RentalResponseDTO findById(Integer id) {
-        Rental rental = rentalRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Aluguel não encontrado com id: " + id));
-        return new RentalResponseDTO(rental);
-    }
-
-    public RentalResponseDTO conclude(Integer id) {
-        Rental rental = rentalRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Aluguel não encontrado com id: " + id));
-
-        if (!rental.getStatus().getName().equals("ativa")) {
-            throw new IllegalStateException("Apenas alugueis ativos podem ser concluídos");
+                return mapToResponse(saved);
         }
 
-        RentalStatus concluded = rentalStatusRepository.findByName("concluida")
-                .orElseThrow(() -> new IllegalStateException("Status 'concluida' não encontrado"));
-        rental.setStatus(concluded);
-        rental.setActualReturnDate(java.time.LocalDateTime.now());
-
-        // Muda status da nave de volta para 'disponivel'
-        SpaceshipStatus disponivel = spaceshipStatusRepository.findByName("disponivel")
-                .orElseThrow(() -> new IllegalStateException("Status 'disponivel' não encontrado"));
-        rental.getSpaceship().setStatus(disponivel);
-        spaceshipRepository.save(rental.getSpaceship());
-
-        return new RentalResponseDTO(rentalRepository.save(rental));
-    }
-
-    public RentalResponseDTO cancel(Integer id) {
-        Rental rental = rentalRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Aluguel não encontrado com id: " + id));
-
-        if (!rental.getStatus().getName().equals("ativa")) {
-            throw new IllegalStateException("Apenas alugueis ativos podem ser cancelados");
+        public List<RentalResponseDTO> findAll() {
+                Map<Integer, String> userNames = new HashMap<>();
+                return rentalRepository.findAll().stream()
+                                .map(rental -> mapToResponse(rental, userNames))
+                                .toList();
         }
 
-        RentalStatus cancelled = rentalStatusRepository.findByName("cancelada")
-                .orElseThrow(() -> new IllegalStateException("Status 'cancelada' não encontrado"));
-        rental.setStatus(cancelled);
+        public List<RentalResponseDTO> findByUserId(Integer userId) {
+                String resolvedUserName = resolveUserName(userId);
+                return rentalRepository.findAllByUserId(userId).stream()
+                                .map(rental -> new RentalResponseDTO(rental, resolvedUserName))
+                                .toList();
+        }
 
-        // Muda status da nave de volta para 'disponivel'
-        SpaceshipStatus disponivel = spaceshipStatusRepository.findByName("disponivel")
-                .orElseThrow(() -> new IllegalStateException("Status 'disponivel' não encontrado"));
-        rental.getSpaceship().setStatus(disponivel);
-        spaceshipRepository.save(rental.getSpaceship());
+        public RentalResponseDTO findById(Integer id) {
+                Rental rental = rentalRepository.findById(id)
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                RENTAL_NOT_FOUND_PREFIX + id));
+                return mapToResponse(rental);
+        }
 
-        return new RentalResponseDTO(rentalRepository.save(rental));
-    }
+        public RentalResponseDTO conclude(Integer id) {
+                Rental rental = rentalRepository.findById(id)
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                RENTAL_NOT_FOUND_PREFIX + id));
+
+                if (!rental.getStatus().getName().equals(STATUS_ATIVA)) {
+                        throw new IllegalStateException("Apenas alugueis ativos podem ser concluídos");
+                }
+
+                RentalStatus concluded = rentalStatusRepository.findByName("concluida")
+                                .orElseThrow(() -> statusNotFound("concluida"));
+                rental.setStatus(concluded);
+                rental.setActualReturnDate(java.time.LocalDateTime.now());
+
+                // Muda status da nave de volta para 'disponivel'
+                SpaceshipStatus disponivel = spaceshipStatusRepository.findByName(STATUS_DISPONIVEL)
+                                .orElseThrow(() -> statusNotFound(STATUS_DISPONIVEL));
+                rental.getSpaceship().setStatus(disponivel);
+                spaceshipRepository.save(rental.getSpaceship());
+
+                return mapToResponse(rentalRepository.save(rental));
+        }
+
+        public RentalResponseDTO cancel(Integer id) {
+                Rental rental = rentalRepository.findById(id)
+                                .orElseThrow(() -> new IllegalArgumentException(
+                                                RENTAL_NOT_FOUND_PREFIX + id));
+
+                if (!rental.getStatus().getName().equals(STATUS_ATIVA)) {
+                        throw new IllegalStateException("Apenas alugueis ativos podem ser cancelados");
+                }
+
+                RentalStatus cancelled = rentalStatusRepository.findByName("cancelada")
+                                .orElseThrow(() -> statusNotFound("cancelada"));
+                rental.setStatus(cancelled);
+
+                // Muda status da nave de volta para 'disponivel'
+                SpaceshipStatus disponivel = spaceshipStatusRepository.findByName(STATUS_DISPONIVEL)
+                                .orElseThrow(() -> statusNotFound(STATUS_DISPONIVEL));
+                rental.getSpaceship().setStatus(disponivel);
+                spaceshipRepository.save(rental.getSpaceship());
+
+                return mapToResponse(rentalRepository.save(rental));
+        }
+
+        private RentalResponseDTO mapToResponse(Rental rental) {
+                return new RentalResponseDTO(rental, resolveUserName(rental.getUserId()));
+        }
+
+        private RentalResponseDTO mapToResponse(Rental rental, Map<Integer, String> userNamesCache) {
+                String resolvedUserName = userNamesCache.computeIfAbsent(rental.getUserId(), this::resolveUserName);
+                return new RentalResponseDTO(rental, resolvedUserName);
+        }
+
+        private String resolveUserName(Integer userId) {
+                return userRepository.findById(userId)
+                                .map(User::getName)
+                                .orElse("Usuário #" + userId);
+        }
+
+        private IllegalStateException statusNotFound(String statusName) {
+                return new IllegalStateException("Status '" + statusName + "' não encontrado");
+        }
 }
-
