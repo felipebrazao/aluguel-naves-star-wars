@@ -7,6 +7,8 @@ const navItems = [
     { to: '/meus-alugueis', label: 'Meus Aluguéis' },
     { to: '/painel', label: 'Operações' },
     { to: '/painel/gestao', label: 'Gestão' },
+    { to: '/admin/utilizadores', label: 'Utilizadores' },
+    { to: '/admin/pagamentos', label: 'Pagamentos' },
 ]
 
 const activeButtonClasses =
@@ -56,7 +58,7 @@ function NavBar() {
                     <div className="flex items-center gap-3">
                         <img src="/r2d2_128.png" alt="R2-D2" className="h-12 w-12 shrink-0 object-contain" />
                         <div>
-                            <p className="text-xs uppercase tracking-[0.35em] text-rebel-blue">Star Rental</p>
+                            <p className="text-xs uppercase tracking-[0.35em] text-text-secondary">Star Rental</p>
                             <h1 className="text-lg font-semibold text-sw-yellow">Painel de Controle Galáctico</h1>
                         </div>
                     </div>

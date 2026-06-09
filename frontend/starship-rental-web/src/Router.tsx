@@ -4,6 +4,8 @@ import ProtectedRoute from './components/ProtectedRoute'
 import OperationsDashboard from './pages/OperationsDashboard'
 import FleetManagement from './pages/management/FleetManagement'
 import PlanetsManagement from './pages/management/PlanetsManagement'
+import UsersManagement from './pages/management/UsersManagement'
+import PaymentsManagement from './pages/management/PaymentsManagement'
 import Management from './pages/management/Management'
 import Login from './pages/Login'
 import Home from './pages/Home'
@@ -47,6 +49,7 @@ function Router() {
                         </ProtectedRoute>
                     }
                 />
+
                 <Route
                     path="/frota"
                     element={
@@ -55,6 +58,7 @@ function Router() {
                         </ProtectedRoute>
                     }
                 />
+
                 <Route
                     path="/planetas"
                     element={
@@ -63,6 +67,25 @@ function Router() {
                         </ProtectedRoute>
                     }
                 />
+
+                <Route
+                    path="/admin/utilizadores"
+                    element={
+                        <ProtectedRoute>
+                            <UsersManagement />
+                        </ProtectedRoute>
+                    }
+                />
+
+                <Route
+                    path="/admin/pagamentos"
+                    element={
+                        <ProtectedRoute>
+                            <PaymentsManagement />
+                        </ProtectedRoute>
+                    }
+                />
+
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
         </Routes>
