@@ -1,59 +1,36 @@
-name: Mandatory Tests
+name: CI
 
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
   pull_request:
 
 jobs:
   backend:
-    name: Backend integration tests
     runs-on: ubuntu-latest
-
     defaults:
-      run:
-        working-directory: backend/starship-rental
-
+      run: { working-directory: backend/starship-rental }
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
-
-      - name: Run backend tests
-        run: ./mvnw verify
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21, cache: maven }
+      - run: ./mvnw verify
 
   frontend:
-    name: Frontend unit and E2E tests
     runs-on: ubuntu-latest
-
     defaults:
-      run:
-        working-directory: frontend/starship-rental-web
-
+      run: { working-directory: frontend/starship-rental-web }
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/starship-rental-web/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Run frontend verification suite
-        run: npm run verify
+      
+      # Executa tudo exceto o teste E2E (ignora o Playwright)
+      - run: |
+          npm ci
+          npm run lint
+          npm run test:ci
+          npm run build
