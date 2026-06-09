@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ElementType, ReactNode } from 'react'
 
-type PilledButtonVariant = 'primary' | 'secondary' | 'danger'
+type PilledButtonVariant = 'primary' | 'secondary' | 'danger' | 'cancel'
 
 type PilledButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
     as?: ElementType
@@ -17,12 +17,15 @@ const variantClasses: Record<PilledButtonVariant, string> = {
         'border-jedi-blue text-jedi-blue bg-transparent hover:bg-jedi-blue hover:text-space-black hover:shadow-[0_0_18px_rgba(46,103,248,0.45)]',
     danger:
         'border-sith-red text-sith-red bg-transparent hover:bg-sith-red hover:text-space-black hover:shadow-[0_0_18px_rgba(235,33,46,0.45)]',
+    cancel:
+        'border-transparent bg-white/10 text-gray-300 hover:bg-white/20 hover:text-gray-100',
 }
 
 const activeClasses: Record<PilledButtonVariant, string> = {
     primary: 'bg-sw-yellow/10 shadow-[0_0_18px_rgba(255,232,31,0.18)]',
     secondary: 'bg-jedi-blue/10 shadow-[0_0_18px_rgba(46,103,248,0.18)]',
     danger: 'bg-sith-red/10 shadow-[0_0_18px_rgba(235,33,46,0.18)]',
+    cancel: 'bg-white/20',
 }
 
 function PilledButton({

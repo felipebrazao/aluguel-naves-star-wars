@@ -233,7 +233,7 @@ function Login() {
     >
       <AnimatedCard className="w-full max-w-md p-8" hover={false}>
         <div>
-          <p className="text-xs uppercase tracking-[0.4em] text-rebel-blue">
+          <p className="text-xs uppercase tracking-[0.4em] text-text-secondary">
             Autenticação
           </p>
           <h1 className="mt-3 text-3xl font-semibold text-sw-yellow">
@@ -273,7 +273,7 @@ function Login() {
           {isRegister ? (
             <div className="form-control">
               <label htmlFor="name" className="label">
-                <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">
+                <span className="label-text text-xs uppercase tracking-[0.25em] text-text-secondary">
                   Nome
                 </span>
               </label>
@@ -291,7 +291,7 @@ function Login() {
           {isRegister ? (
             <div className="form-control">
               <label htmlFor="cpf" className="label">
-                <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">
+                <span className="label-text text-xs uppercase tracking-[0.25em] text-text-secondary">
                   CPF
                 </span>
               </label>
@@ -309,7 +309,7 @@ function Login() {
 
           <div className="form-control">
             <label htmlFor="email" className="label">
-              <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">
+              <span className="label-text text-xs uppercase tracking-[0.25em] text-text-secondary">
                 E-mail
               </span>
             </label>
@@ -325,7 +325,7 @@ function Login() {
 
           <div className="form-control">
             <label htmlFor="password" className="label">
-              <span className="label-text text-xs uppercase tracking-[0.25em] text-rebel-blue">
+              <span className="label-text text-xs uppercase tracking-[0.25em] text-text-secondary">
                 Senha
               </span>
             </label>

@@ -31,7 +31,7 @@ function PageHeader({
         <section className={classes}>
             <div className="flex items-start justify-between gap-6">
                 <div className="min-w-0 flex-1">
-                    <p className="text-xs uppercase tracking-[0.4em] text-jedi-blue">{overline}</p>
+                    <p className="text-xs uppercase tracking-[0.4em] text-text-secondary">{overline}</p>
                     <h2 className="mt-3 text-3xl font-semibold text-sw-yellow sm:text-4xl">{title}</h2>
                     <p className="mt-4 text-sm leading-6 text-gray-300">{description}</p>
                 </div>
