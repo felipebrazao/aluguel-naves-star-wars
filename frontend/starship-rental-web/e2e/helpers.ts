@@ -22,7 +22,6 @@ const TEST_USER = {
  */
 async function authenticateAs(
     page: Page,
-    _role: 'Cliente' | 'Admin' = 'Cliente',
 ): Promise<void> {
     // Navega para o frontend para que o localStorage fique no origin correcto
     await page.goto('/login')

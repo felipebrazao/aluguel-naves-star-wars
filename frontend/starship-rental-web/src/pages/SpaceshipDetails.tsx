@@ -8,7 +8,6 @@ import PageHeader from '../components/shared/PageHeader'
 import AnimatedModal from '../components/ui/AnimatedModal'
 import AnimatedButton from '../components/ui/AnimatedButton'
 import AnimatedCard from '../components/ui/AnimatedCard'
-import PilledButton from '../components/shared/PilledButton'
 import { apiFetch } from '../services/api'
 import { formatCredits } from '../utils/formatters'
 import type {

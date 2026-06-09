@@ -12,7 +12,7 @@ import { authenticateAs } from './helpers'
  */
 test.describe('Painel de Gestão', () => {
     test.beforeEach(async ({ page }) => {
-        await authenticateAs(page, 'Admin')
+        await authenticateAs(page)
 
         // Regista os listeners antes de navegar para capturar as respostas
         const fleetLoaded = page.waitForResponse(
