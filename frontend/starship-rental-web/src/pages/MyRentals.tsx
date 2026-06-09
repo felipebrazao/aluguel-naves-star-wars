@@ -4,20 +4,68 @@ import PageHeader from '../components/shared/PageHeader'
 import DataTable, { type DataTableColumn } from '../components/shared/DataTable'
 import OutlineButton from '../components/shared/OutlineButton'
 import AnimatedCard from '../components/ui/AnimatedCard'
+import { apiFetch } from '../services/api'
+import type { AuthUser, RentalResponseDTO } from '../types/entities'
 
-type Rental = {
-    id: number
-    spaceshipName: string
-    status: string
-    totalPrice: number
-    startDate: string
-    endDate: string
-    pickupPlanetName: string
-    returnPlanetName: string
+const STATUS_BADGE_CLASS_MAP: Record<string, string> = {
+    ativa: 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue',
+    concluida: 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green',
+    cancelada: 'border-jedi-red/40 bg-jedi-red/10 text-jedi-red',
+}
+
+function formatRentalDate(dateString: string): string {
+    return new Date(dateString).toLocaleDateString('pt-BR')
+}
+
+const renderRentalStatusCell: DataTableColumn<RentalResponseDTO>['accessor'] = (rental) => {
+    const normalizedStatus = rental.status.toLowerCase()
+    const statusClass = STATUS_BADGE_CLASS_MAP[normalizedStatus] ?? STATUS_BADGE_CLASS_MAP.cancelada
+
+    return (
+        <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${statusClass}`}>
+            {normalizedStatus}
+        </span>
+    )
+}
+
+const renderRentalStartDateCell: DataTableColumn<RentalResponseDTO>['accessor'] = (rental) => formatRentalDate(rental.startDate)
+
+const renderRentalEndDateCell: DataTableColumn<RentalResponseDTO>['accessor'] = (rental) => formatRentalDate(rental.endDate)
+
+const renderRentalPriceCell: DataTableColumn<RentalResponseDTO>['accessor'] = (rental) => (
+    <span className="font-semibold text-sw-yellow">R$ {rental.totalPrice.toFixed(2)}</span>
+)
+
+function createRentalActionsAccessor(
+    actionLoading: number | null,
+    onConclude: (id: number) => void,
+    onCancel: (id: number) => void,
+): DataTableColumn<RentalResponseDTO>['accessor'] {
+    return (rental) =>
+        rental.status.toLowerCase() === 'ativa' ? (
+            <div className="flex gap-2">
+                <OutlineButton
+                    variant="default"
+                    size="sm"
+                    onClick={() => onConclude(rental.id)}
+                    disabled={actionLoading === rental.id}
+                >
+                    {actionLoading === rental.id ? '...' : 'Concluir'}
+                </OutlineButton>
+                <OutlineButton
+                    variant="error"
+                    size="sm"
+                    onClick={() => onCancel(rental.id)}
+                    disabled={actionLoading === rental.id}
+                >
+                    {actionLoading === rental.id ? '...' : 'Cancelar'}
+                </OutlineButton>
+            </div>
+        ) : null
 }
 
 function MyRentals() {
-    const [rentals, setRentals] = useState<Rental[]>([])
+    const [rentals, setRentals] = useState<RentalResponseDTO[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [actionLoading, setActionLoading] = useState<number | null>(null)
@@ -30,12 +78,12 @@ function MyRentals() {
                 if (!userStr) {
                     throw new Error('Usuário não autenticado')
                 }
-                const user = JSON.parse(userStr)
+                const user: AuthUser = JSON.parse(userStr)
 
-                const res = await fetch(`http://localhost:8080/rentals/user/${user.id}`)
+                const res = await apiFetch(`/rentals/user/${user.id}`)
                 if (!res.ok) throw new Error('Erro ao carregar aluguéis')
 
-                const data = await res.json()
+                const data: RentalResponseDTO[] = await res.json()
                 setRentals(data)
             } catch (err) {
                 setError(err instanceof Error ? err.message : 'Erro ao carregar aluguéis')
@@ -52,7 +100,7 @@ function MyRentals() {
 
         setActionLoading(rentalId)
         try {
-            const res = await fetch(`http://localhost:8080/rentals/${rentalId}/cancel`, {
+            const res = await apiFetch(`/rentals/${rentalId}/cancel`, {
                 method: 'PATCH',
             })
             if (!res.ok) throw new Error('Erro ao cancelar aluguel')
@@ -60,8 +108,8 @@ function MyRentals() {
             // Refresh rentals
             const userStr = localStorage.getItem('user')
             if (userStr) {
-                const user = JSON.parse(userStr)
-                const rentalsRes = await fetch(`http://localhost:8080/rentals/user/${user.id}`)
+                const user: AuthUser = JSON.parse(userStr)
+                const rentalsRes = await apiFetch(`/rentals/user/${user.id}`)
                 if (rentalsRes.ok) {
                     setRentals(await rentalsRes.json())
                 }
@@ -78,7 +126,7 @@ function MyRentals() {
 
         setActionLoading(rentalId)
         try {
-            const res = await fetch(`http://localhost:8080/rentals/${rentalId}/conclude`, {
+            const res = await apiFetch(`/rentals/${rentalId}/conclude`, {
                 method: 'PATCH',
             })
             if (!res.ok) throw new Error('Erro ao concluir aluguel')
@@ -86,8 +134,8 @@ function MyRentals() {
             // Refresh rentals
             const userStr = localStorage.getItem('user')
             if (userStr) {
-                const user = JSON.parse(userStr)
-                const rentalsRes = await fetch(`http://localhost:8080/rentals/user/${user.id}`)
+                const user: AuthUser = JSON.parse(userStr)
+                const rentalsRes = await apiFetch(`/rentals/user/${user.id}`)
                 if (rentalsRes.ok) {
                     setRentals(await rentalsRes.json())
                 }
@@ -99,57 +147,21 @@ function MyRentals() {
         }
     }
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('pt-BR')
-    }
-
-    const rentalColumns: DataTableColumn<Rental>[] = [
+    const rentalColumns: DataTableColumn<RentalResponseDTO>[] = [
         { header: 'Nave', accessor: 'spaceshipName' },
         {
             header: 'Status',
-            accessor: (rental) => (
-                <span
-                    className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${
-                        rental.status === 'ativa'
-                            ? 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue'
-                            : rental.status === 'concluida'
-                            ? 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green'
-                            : 'border-jedi-red/40 bg-jedi-red/10 text-jedi-red'
-                    }`}
-                >
-                    {rental.status}
-                </span>
-            ),
+            accessor: renderRentalStatusCell,
         },
-        { header: 'Início', accessor: (rental) => formatDate(rental.startDate) },
-        { header: 'Fim', accessor: (rental) => formatDate(rental.endDate) },
+        { header: 'Início', accessor: renderRentalStartDateCell },
+        { header: 'Fim', accessor: renderRentalEndDateCell },
         {
             header: 'Valor',
-            accessor: (rental) => <span className="font-semibold text-sw-yellow">R$ {rental.totalPrice.toFixed(2)}</span>,
+            accessor: renderRentalPriceCell,
         },
         {
             header: 'Ações',
-            accessor: (rental) =>
-                rental.status === 'ativa' ? (
-                    <div className="flex gap-2">
-                        <OutlineButton
-                            variant="default"
-                            size="sm"
-                            onClick={() => handleConclude(rental.id)}
-                            disabled={actionLoading === rental.id}
-                        >
-                            {actionLoading === rental.id ? '...' : 'Concluir'}
-                        </OutlineButton>
-                        <OutlineButton
-                            variant="error"
-                            size="sm"
-                            onClick={() => handleCancel(rental.id)}
-                            disabled={actionLoading === rental.id}
-                        >
-                            {actionLoading === rental.id ? '...' : 'Cancelar'}
-                        </OutlineButton>
-                    </div>
-                ) : null,
+            accessor: createRentalActionsAccessor(actionLoading, handleConclude, handleCancel),
         },
     ]
 

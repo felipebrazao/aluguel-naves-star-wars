@@ -1,29 +1,28 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import PageHeader from '../../components/shared/PageHeader'
 import DataTable, { type DataTableColumn } from '../../components/shared/DataTable'
 import Modal from '../../components/shared/Modal'
 import PilledButton from '../../components/shared/PilledButton'
+import AnimatedCard from '../../components/ui/AnimatedCard'
+import { apiFetch } from '../../services/api'
+import type { SpaceshipResponseDTO } from '../../types/entities'
 
-type FleetStatus = 'DISPONIVEL' | 'MANUTENCAO' | 'DESATIVADA'
+type FleetStatus = 'disponivel' | 'manutencao' | 'desativada' | 'alugada'
+type EditableFleetStatus = 'disponivel' | 'manutencao' | 'desativada'
 
 type FleetShip = {
-    id: string
+    id: number
     name: string
     model: string
     status: FleetStatus
 }
 
-const fleetShips: FleetShip[] = [
-    { id: 'fleet-001', name: 'Millennium Falcon', model: 'YT-1300', status: 'DISPONIVEL' },
-    { id: 'fleet-002', name: 'X-Wing Starfighter', model: 'T-65B', status: 'MANUTENCAO' },
-    { id: 'fleet-003', name: 'TIE Advanced x1', model: 'Experimental Interceptor', status: 'DESATIVADA' },
-]
-
 const fleetStatusStyles: Record<FleetStatus, string> = {
-    DISPONIVEL: 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green',
-    MANUTENCAO: 'border-windu-purple/40 bg-windu-purple/10 text-windu-purple',
-    DESATIVADA: 'border-sith-red/40 bg-sith-red/10 text-sith-red',
+    disponivel: 'border-jedi-green/40 bg-jedi-green/10 text-jedi-green',
+    manutencao: 'border-windu-purple/40 bg-windu-purple/10 text-windu-purple',
+    desativada: 'border-sith-red/40 bg-sith-red/10 text-sith-red',
+    alugada: 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue',
 }
 
 type FleetStatusBadgeProps = {
@@ -72,37 +71,110 @@ function createFleetColumns(onManage: (ship: FleetShip) => void): DataTableColum
     ]
 }
 
+function normalizeFleetStatus(rawStatus: string): FleetStatus {
+    const normalized = rawStatus.toLowerCase()
+    if (normalized === 'manutencao' || normalized === 'desativada' || normalized === 'alugada') {
+        return normalized
+    }
+    return 'disponivel'
+}
+
 function FleetManagement() {
+    const [fleetShips, setFleetShips] = useState<FleetShip[]>([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState<string | null>(null)
     const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
     const [selectedShip, setSelectedShip] = useState<FleetShip | null>(null)
-    const [newStatus, setNewStatus] = useState<FleetStatus>('DISPONIVEL')
+    const [newStatus, setNewStatus] = useState<EditableFleetStatus>('manutencao')
     const [estimatedCost, setEstimatedCost] = useState('')
     const [repairDescription, setRepairDescription] = useState('')
+    const [isSaving, setIsSaving] = useState(false)
+
+    const loadFleet = async () => {
+        try {
+            setLoading(true)
+            setError(null)
+            const response = await apiFetch('/spaceships')
+            if (!response.ok) {
+                throw new Error('Erro ao carregar frota')
+            }
+
+            const data: SpaceshipResponseDTO[] = await response.json()
+            const mapped = data.map((ship) => ({
+                id: ship.id,
+                name: ship.name,
+                model: ship.model,
+                status: normalizeFleetStatus(ship.status),
+            }))
+
+            setFleetShips(mapped)
+        } catch (loadError) {
+            setError(loadError instanceof Error ? loadError.message : 'Erro ao carregar frota')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        loadFleet()
+    }, [])
 
     const handleOpenStatusModal = (ship: FleetShip) => {
         setSelectedShip(ship)
-        setNewStatus(ship.status)
+        setNewStatus(ship.status === 'alugada' ? 'manutencao' : ship.status)
         setEstimatedCost('')
         setRepairDescription('')
         setIsStatusModalOpen(true)
     }
 
-    const fleetColumns = createFleetColumns(handleOpenStatusModal)
+    const fleetColumns = useMemo(() => createFleetColumns(handleOpenStatusModal), [])
 
     const handleCloseModal = () => {
         setIsStatusModalOpen(false)
         setSelectedShip(null)
-        setNewStatus('DISPONIVEL')
+        setNewStatus('disponivel')
         setEstimatedCost('')
         setRepairDescription('')
     }
 
-    const handleSubmit = (event: React.SyntheticEvent<HTMLFormElement>) => {
+    const handleSubmit = async (event: React.SyntheticEvent<HTMLFormElement>) => {
         event.preventDefault()
-        handleCloseModal()
+        if (!selectedShip) {
+            return
+        }
+
+        try {
+            setIsSaving(true)
+            const response = await apiFetch(`/spaceships/${selectedShip.id}/status`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus }),
+            })
+
+            if (!response.ok) {
+                const responseText = await response.text()
+                throw new Error(responseText || 'Erro ao atualizar status da nave')
+            }
+
+            await loadFleet()
+            handleCloseModal()
+        } catch (saveError) {
+            setError(saveError instanceof Error ? saveError.message : 'Erro ao atualizar status da nave')
+        } finally {
+            setIsSaving(false)
+        }
     }
 
     const statusModalTitle = selectedShip ? `Gerir Status - ${selectedShip.name}` : 'Gerir Status'
+    const tableContent = (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+        >
+            <DataTable columns={fleetColumns} data={fleetShips} rowKey="id" />
+        </motion.div>
+    )
 
     return (
         <motion.section
@@ -116,19 +188,25 @@ function FleetManagement() {
                 title="Gestão de Frota"
                 description="Catálogo físico de naves e controle operacional da frota."
                 actions={
-                    <PilledButton variant="primary" className="px-4 py-2 text-sm">
-                        Adicionar Nave
+                    <PilledButton variant="primary" className="px-4 py-2 text-sm" onClick={loadFleet}>
+                        Atualizar Frota
                     </PilledButton>
                 }
             />
 
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-            >
-                <DataTable columns={fleetColumns} data={fleetShips} rowKey="id" />
-            </motion.div>
+            {loading && (
+                <AnimatedCard className="p-8 text-center">
+                    <p className="text-gray-400">Carregando frota...</p>
+                </AnimatedCard>
+            )}
+
+            {!loading && error && (
+                <AnimatedCard className="p-8 text-center">
+                    <p className="text-red-400">{error}</p>
+                </AnimatedCard>
+            )}
+
+            {!loading && !error && tableContent}
 
             <Modal
                 isOpen={isStatusModalOpen}
@@ -144,15 +222,15 @@ function FleetManagement() {
                             id="newStatus"
                             className="select select-bordered w-full bg-surface-light/30 text-gray-100"
                             value={newStatus}
-                            onChange={(event) => setNewStatus(event.target.value as FleetStatus)}
+                            onChange={(event) => setNewStatus(event.target.value as EditableFleetStatus)}
                         >
-                            <option value="DISPONIVEL">DISPONIVEL</option>
-                            <option value="MANUTENCAO">MANUTENCAO</option>
-                            <option value="DESATIVADA">DESATIVADA</option>
+                            <option value="disponivel">DISPONIVEL</option>
+                            <option value="manutencao">MANUTENCAO</option>
+                            <option value="desativada">DESATIVADA</option>
                         </select>
                     </div>
 
-                    {newStatus === 'MANUTENCAO' ? (
+                    {newStatus === 'manutencao' ? (
                         <div className="space-y-5 rounded-2xl border border-panel-border bg-surface-light/30 p-4">
                             <div className="form-control">
                                 <label htmlFor="estimatedCost" className="label">
@@ -191,8 +269,8 @@ function FleetManagement() {
                             Cancelar
                         </button>
 
-                        <PilledButton variant="primary" type="submit" className="w-full sm:w-auto">
-                            Guardar Alterações
+                        <PilledButton variant="primary" type="submit" className="w-full sm:w-auto" disabled={isSaving}>
+                            {isSaving ? 'Salvando...' : 'Guardar Alterações'}
                         </PilledButton>
                     </div>
                 </form>

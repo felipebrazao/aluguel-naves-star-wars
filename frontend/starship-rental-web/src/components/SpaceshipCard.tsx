@@ -19,7 +19,8 @@ function SpaceshipCard({ id, name, model, dailyPrice, capacity, status }: Readon
     alugada: 'border-jedi-blue/40 bg-jedi-blue/10 text-jedi-blue',
   }
 
-  const displayStatus = status.charAt(0).toUpperCase() + status.slice(1)
+  const normalizedStatus = status.toLowerCase()
+  const displayStatus = normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1)
 
   return (
     <AnimatedCard className="flex h-full min-h-[320px] flex-col p-5">
@@ -28,7 +29,7 @@ function SpaceshipCard({ id, name, model, dailyPrice, capacity, status }: Readon
           <p className="text-xs uppercase tracking-[0.3em] text-rebel-blue">Nave</p>
           <h3 className="mt-1 text-xl font-semibold text-sw-yellow">{name}</h3>
         </div>
-        <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${statusStyles[status]}`}>
+        <span className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${statusStyles[normalizedStatus] ?? statusStyles.disponivel}`}>
           {displayStatus}
         </span>
       </div>

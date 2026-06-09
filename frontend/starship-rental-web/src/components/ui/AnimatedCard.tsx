@@ -7,7 +7,7 @@ interface AnimatedCardProps {
   hover?: boolean
 }
 
-export default function AnimatedCard({ children, className = '', hover = true }: AnimatedCardProps) {
+export default function AnimatedCard({ children, className = '', hover = true }: Readonly<AnimatedCardProps>) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
