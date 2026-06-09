@@ -17,6 +17,7 @@ public class SpaceshipService {
 
     private static final BigDecimal PISO = new BigDecimal("100.00");
     private static final BigDecimal TETO = new BigDecimal("50000.00");
+    private static final String SHIP_NOT_FOUND_PREFIX = "Nave não encontrada com id: ";
 
     private final SpaceshipRepository spaceshipRepository;
     private final SpaceshipStatusRepository statusRepository;
@@ -62,13 +63,13 @@ public class SpaceshipService {
 
     public SpaceshipResponseDTO findById(Integer id) {
         Spaceship spaceship = spaceshipRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Nave não encontrada com id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(SHIP_NOT_FOUND_PREFIX + id));
         return new SpaceshipResponseDTO(spaceship);
     }
 
     public SpaceshipResponseDTO update(Integer id, SpaceshipRequestDTO dto) {
         Spaceship spaceship = spaceshipRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Nave não encontrada com id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(SHIP_NOT_FOUND_PREFIX + id));
 
         spaceship.setName(dto.getName());
         spaceship.setModel(dto.getModel());
@@ -82,7 +83,7 @@ public class SpaceshipService {
 
     public Spaceship toggleActive(Integer id) {
         Spaceship spaceship = spaceshipRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Nave não encontrada com id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(SHIP_NOT_FOUND_PREFIX + id));
 
         spaceship.setActive(!spaceship.getActive());
         return spaceshipRepository.save(spaceship);
@@ -90,9 +91,9 @@ public class SpaceshipService {
 
     public SpaceshipResponseDTO updateStatus(Integer id, String statusName) {
         Spaceship spaceship = spaceshipRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Nave não encontrada com id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(SHIP_NOT_FOUND_PREFIX + id));
 
-        if (statusName == null || !Set.of("manutencao", "desativada").contains(statusName)) {
+        if (statusName == null || !Set.of("disponivel", "manutencao", "desativada").contains(statusName)) {
             throw new IllegalStateException("Status inválido: " + statusName);
         }
 

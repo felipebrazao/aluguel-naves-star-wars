@@ -26,10 +26,7 @@ public class SpaceshipResponseDTO {
         this.costInCredits = spaceship.getCostInCredits();
         this.capacity = spaceship.getCapacity();
         this.dailyPrice = spaceship.getDailyPrice();
-        this.status = spaceship.getStatus().getName();
+        this.status = spaceship.getStatus().getName().toLowerCase();
         this.active = spaceship.getActive();
     }
 }
-
-
-

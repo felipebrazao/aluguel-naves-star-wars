@@ -19,6 +19,8 @@ import java.util.UUID;
 @RequestMapping("/users")
 public class UserController {
 
+    private static final String ERROR_KEY = "error";
+
     private final UserService userService;
     private final UserImportService userImportService;
 
@@ -32,8 +34,7 @@ public class UserController {
         int total = userImportService.importUsers();
         return ResponseEntity.ok(Map.of(
                 "mensagem", "Importação de usuários concluída com sucesso!",
-                "totalUsuarios", total
-        ));
+                "totalUsuarios", total));
     }
 
     @PostMapping
@@ -54,7 +55,7 @@ public class UserController {
 
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> update(@PathVariable Integer id,
-                                                  @Validated @RequestBody UserRequestDTO dto) {
+            @Validated @RequestBody UserRequestDTO dto) {
         return ResponseEntity.ok(userService.update(id, dto));
     }
 
@@ -64,33 +65,30 @@ public class UserController {
         return ResponseEntity.ok(Map.of(
                 "id", user.getId(),
                 "name", user.getName(),
-                "active", user.getActive()
-        ));
+                "active", user.getActive()));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> body) {
         String email = body.get("email");
         String password = body.get("password");
         if (email == null || password == null) {
-            return ResponseEntity.badRequest().body(Map.of("error", "email and password are required"));
+            return ResponseEntity.badRequest().body(Map.of(ERROR_KEY, "email and password are required"));
         }
 
         Optional<User> opt = userService.findByEmail(email);
         if (opt.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Credenciais inválidas"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(ERROR_KEY, "Credenciais inválidas"));
         }
 
         User user = opt.get();
         if (user.getPasswordHash() == null || !user.getPasswordHash().equals(password)) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Credenciais inválidas"));
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(ERROR_KEY, "Credenciais inválidas"));
         }
 
         String token = UUID.randomUUID().toString();
         return ResponseEntity.ok(Map.of(
                 "token", token,
-                "user", new UserResponseDTO(user)
-        ));
+                "user", new UserResponseDTO(user)));
     }
 }
-

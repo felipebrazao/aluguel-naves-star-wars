@@ -11,6 +11,7 @@ public class RentalResponseDTO {
 
     private final Integer id;
     private final Integer userId;
+    private final String userName;
     private final Integer spaceshipId;
     private final String spaceshipName;
     private final String status;
@@ -26,11 +27,18 @@ public class RentalResponseDTO {
     private final LocalDateTime createdAt;
 
     public RentalResponseDTO(Rental rental) {
+        this(rental, null);
+    }
+
+    public RentalResponseDTO(Rental rental, String resolvedUserName) {
         this.id = rental.getId();
         this.userId = rental.getUserId();
+        this.userName = (resolvedUserName != null && !resolvedUserName.isBlank())
+                ? resolvedUserName
+                : "Usuário #" + rental.getUserId();
         this.spaceshipId = rental.getSpaceship().getId();
         this.spaceshipName = rental.getSpaceship().getName();
-        this.status = rental.getStatus().getName();
+        this.status = rental.getStatus().getName().toLowerCase();
         this.pickupPlanetId = rental.getPickupPlanet().getId();
         this.pickupPlanetName = rental.getPickupPlanet().getName();
         this.returnPlanetId = rental.getReturnPlanet().getId();
@@ -43,4 +51,3 @@ public class RentalResponseDTO {
         this.createdAt = rental.getCreatedAt();
     }
 }
-

@@ -17,6 +17,8 @@ import java.util.Optional;
 @Service
 public class UserService {
 
+    private static final String USER_NOT_FOUND_PREFIX = "Usuário não encontrado com id: ";
+
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
 
@@ -38,8 +40,8 @@ public class UserService {
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setCpf(dto.getCpf());
-        // TODO: substituir por BCryptPasswordEncoder.encode(dto.getPassword()) quando
-        // Spring Security for implementado
+        // Senha temporariamente armazenada sem hash até ativação completa do Spring
+        // Security.
         user.setPasswordHash(dto.getPassword());
         user.setRole(role);
 
@@ -55,28 +57,28 @@ public class UserService {
 
     public UserResponseDTO findById(Integer id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_PREFIX + id));
         return new UserResponseDTO(user);
     }
 
     public UserResponseDTO update(Integer id, UserRequestDTO dto) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_PREFIX + id));
 
         Role role = roleRepository.findById(dto.getRoleId())
                 .orElseThrow(() -> new IllegalArgumentException("Role não encontrada com id: " + dto.getRoleId()));
 
         userRepository.findByEmail(dto.getEmail())
-            .filter(existingUser -> !existingUser.getId().equals(id))
-            .ifPresent(existingUser -> {
-                throw new ResponseStatusException(CONFLICT, "Já existe usuário cadastrado com esse email");
-            });
+                .filter(existingUser -> !existingUser.getId().equals(id))
+                .ifPresent(existingUser -> {
+                    throw new ResponseStatusException(CONFLICT, "Já existe usuário cadastrado com esse email");
+                });
 
         user.setName(dto.getName());
         user.setEmail(dto.getEmail());
         user.setCpf(dto.getCpf());
-        // TODO: substituir por BCryptPasswordEncoder.encode(dto.getPassword()) quando
-        // Spring Security for implementado
+        // Senha temporariamente armazenada sem hash até ativação completa do Spring
+        // Security.
         user.setPasswordHash(dto.getPassword());
         user.setRole(role);
 
@@ -85,7 +87,7 @@ public class UserService {
 
     public User toggleActive(Integer id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado com id: " + id));
+                .orElseThrow(() -> new IllegalArgumentException(USER_NOT_FOUND_PREFIX + id));
         user.setActive(!user.getActive());
         return userRepository.save(user);
     }
