@@ -73,7 +73,7 @@ describe('MyRentals', () => {
 
         renderMyRentals()
 
-        expect(screen.getByText('Carregando...')).toBeInTheDocument()
+        expect(screen.getAllByText('Carregando...').length).toBeGreaterThan(0)
     })
 
     it('should show error message when fetch fails', async () => {
@@ -158,10 +158,15 @@ describe('MyRentals', () => {
         renderMyRentals()
 
         await screen.findByText('Millennium Falcon')
-        expect(screen.getByText('17/05/2026')).toBeInTheDocument()
-        expect(screen.getByText('20/05/2026')).toBeInTheDocument()
-        expect(screen.getByText('12/05/2026')).toBeInTheDocument()
-        expect(screen.getByText('14/05/2026')).toBeInTheDocument()
+        const expectedStartA = new Date(fakeRentals[0].startDate).toLocaleDateString('pt-BR')
+        const expectedEndA = new Date(fakeRentals[0].endDate).toLocaleDateString('pt-BR')
+        const expectedStartB = new Date(fakeRentals[1].startDate).toLocaleDateString('pt-BR')
+        const expectedEndB = new Date(fakeRentals[1].endDate).toLocaleDateString('pt-BR')
+
+        expect(screen.getByText(expectedStartA)).toBeInTheDocument()
+        expect(screen.getByText(expectedEndA)).toBeInTheDocument()
+        expect(screen.getByText(expectedStartB)).toBeInTheDocument()
+        expect(screen.getByText(expectedEndB)).toBeInTheDocument()
     })
 
     it('should show empty state when no rentals are returned', async () => {
@@ -206,16 +211,18 @@ describe('MyRentals', () => {
 
         expect(fetchMock).toHaveBeenNthCalledWith(
             1,
-            'http://localhost:8080/rentals/user/1',
+            'http://localhost:8081/rentals/user/1',
+            expect.objectContaining({ headers: expect.any(Object) }),
         )
         expect(fetchMock).toHaveBeenNthCalledWith(
             2,
-            'http://localhost:8080/rentals/1/cancel',
+            'http://localhost:8081/rentals/1/cancel',
             expect.objectContaining({ method: 'PATCH' }),
         )
         expect(fetchMock).toHaveBeenNthCalledWith(
             3,
-            'http://localhost:8080/rentals/user/1',
+            'http://localhost:8081/rentals/user/1',
+            expect.objectContaining({ headers: expect.any(Object) }),
         )
     })
 })

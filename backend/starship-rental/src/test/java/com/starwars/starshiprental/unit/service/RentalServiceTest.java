@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +48,9 @@ class RentalServiceTest {
     private PaymentMethodRepository paymentMethodRepository;
 
     @Mock
+    private UserRepository userRepository;
+
+    @Mock
     private PaymentService paymentService;
 
     @InjectMocks
@@ -63,6 +67,7 @@ class RentalServiceTest {
     private SpaceshipStatus disponivelStatus;
     private SpaceshipStatus alugadaStatus;
     private PaymentMethod paymentMethod;
+    private User existingUser;
 
     @BeforeEach
     void setUp() {
@@ -71,8 +76,8 @@ class RentalServiceTest {
         validRequestDTO.setSpaceshipId(1);
         validRequestDTO.setPickupPlanetId(1);
         validRequestDTO.setReturnPlanetId(2);
-        validRequestDTO.setStartDate(LocalDateTime.now().plusDays(1));
-        validRequestDTO.setEndDate(LocalDateTime.now().plusDays(5));
+        validRequestDTO.setStartDate(OffsetDateTime.now().plusDays(1));
+        validRequestDTO.setEndDate(OffsetDateTime.now().plusDays(5));
         validRequestDTO.setPaymentMethodId(1);
 
         disponivelStatus = new SpaceshipStatus();
@@ -118,6 +123,12 @@ class RentalServiceTest {
         paymentMethod = new PaymentMethod();
         paymentMethod.setId(1);
         paymentMethod.setName("Cartão de Crédito");
+
+        existingUser = new User();
+        existingUser.setId(1);
+        existingUser.setName("Luke Skywalker");
+
+        lenient().when(userRepository.findById(1)).thenReturn(Optional.of(existingUser));
     }
 
     @Nested
@@ -141,8 +152,8 @@ class RentalServiceTest {
             savedRental.setStatus(ativaStatus);
             savedRental.setPickupPlanet(pickupPlanet);
             savedRental.setReturnPlanet(returnPlanet);
-            savedRental.setStartDate(validRequestDTO.getStartDate());
-            savedRental.setEndDate(validRequestDTO.getEndDate());
+            savedRental.setStartDate(validRequestDTO.getStartDate().toLocalDateTime());
+            savedRental.setEndDate(validRequestDTO.getEndDate().toLocalDateTime());
             savedRental.setTotalPrice(new BigDecimal("2000.00"));
 
             when(rentalRepository.save(any(Rental.class))).thenReturn(savedRental);
@@ -216,8 +227,8 @@ class RentalServiceTest {
             when(planetRepository.findById(1)).thenReturn(Optional.of(pickupPlanet));
             when(planetRepository.findById(2)).thenReturn(Optional.of(returnPlanet));
 
-            validRequestDTO.setStartDate(LocalDateTime.now().plusDays(5));
-            validRequestDTO.setEndDate(LocalDateTime.now().plusDays(1));
+            validRequestDTO.setStartDate(OffsetDateTime.now().plusDays(5));
+            validRequestDTO.setEndDate(OffsetDateTime.now().plusDays(1));
 
             assertThatThrownBy(() -> rentalService.create(validRequestDTO))
                     .isInstanceOf(IllegalStateException.class)

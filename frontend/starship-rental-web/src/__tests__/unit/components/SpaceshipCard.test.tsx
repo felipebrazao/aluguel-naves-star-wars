@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import SpaceshipCard, { type SpaceshipCardProps } from '../../../components/SpaceshipCard'
 
 const defaultProps: SpaceshipCardProps = {
-    id: 'millennium-falcon',
+    id: 1,
     name: 'Millennium Falcon',
     model: 'YT-1300',
     dailyPrice: 4500,
@@ -59,7 +59,7 @@ describe('SpaceshipCard', () => {
     it('should render a link to the ship detail page', () => {
         renderCard()
         const link = screen.getByRole('link', { name: /ver detalhes/i })
-        expect(link).toHaveAttribute('href', '/nave/millennium-falcon')
+        expect(link).toHaveAttribute('href', '/nave/1')
     })
 
     it('should render as an article element', () => {

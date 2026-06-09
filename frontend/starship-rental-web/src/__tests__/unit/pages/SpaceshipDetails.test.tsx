@@ -140,45 +140,50 @@ describe('SpaceshipDetails', () => {
             renderSpaceshipDetails()
 
             expect(await screen.findByText('Erro ao carregar nave')).toBeInTheDocument()
-            expect(screen.getByText('Erro')).toBeInTheDocument()
+            expect(screen.getAllByText('Erro').length).toBeGreaterThan(0)
         })
 
-        it('should render checkout form fields', () => {
+        it('should render checkout form fields', async () => {
             mockFetchByUrl()
 
             renderSpaceshipDetails()
+            await screen.findByText('X-Wing Starfighter')
             expect(screen.getByLabelText(/data de início/i)).toBeInTheDocument()
             expect(screen.getByLabelText(/data de fim/i)).toBeInTheDocument()
             expect(screen.getByLabelText(/planeta de retirada/i)).toBeInTheDocument()
             expect(screen.getByLabelText(/planeta de devolução/i)).toBeInTheDocument()
         })
 
-        it('should render location options in select', () => {
+        it('should render location options in select', async () => {
             mockFetchByUrl()
 
             renderSpaceshipDetails()
+            await screen.findByText('X-Wing Starfighter')
             expect(screen.getAllByText('Coruscant Spaceport').length).toBeGreaterThanOrEqual(1)
             expect(screen.getAllByText('Tatooine Mos Eisley').length).toBeGreaterThanOrEqual(1)
         })
 
-        it('should render confirm button as disabled by default', () => {
+        it('should render confirm button as disabled by default', async () => {
             mockFetchByUrl()
 
             renderSpaceshipDetails()
-            expect(screen.getByRole('button', { name: /confirmar aluguel/i })).toBeDisabled()
+            const confirmButton = await screen.findByRole('button', { name: /confirmar aluguel/i })
+            expect(confirmButton).toBeDisabled()
         })
 
-        it('should show placeholder message before dates are selected', () => {
+        it('should show placeholder message before dates are selected', async () => {
             mockFetchByUrl()
 
             renderSpaceshipDetails()
+            await screen.findByText('X-Wing Starfighter')
             expect(screen.getByText('Selecione as datas para calcular')).toBeInTheDocument()
         })
 
-        it('should show R$ 0.00 as initial total', () => {
+        it('should show R$ 0.00 as initial total', async () => {
             mockFetchByUrl()
 
             renderSpaceshipDetails()
+            await screen.findByText('X-Wing Starfighter')
             expect(screen.getByText('R$ 0.00')).toBeInTheDocument()
         })
     })
