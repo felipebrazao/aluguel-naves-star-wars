@@ -93,7 +93,7 @@ public class SpaceshipService {
         Spaceship spaceship = spaceshipRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException(SHIP_NOT_FOUND_PREFIX + id));
 
-        if (statusName == null || !Set.of("disponivel", "manutencao", "desativada").contains(statusName)) {
+        if (statusName == null || !Set.of("manutencao", "desativada").contains(statusName)) {
             throw new IllegalStateException("Status inválido: " + statusName);
         }
 
