@@ -133,8 +133,20 @@ CREATE TABLE payments (
 );
 
 -- ===== Seed Data =====
-INSERT INTO spaceship_status (name) VALUES ('disponivel'), ('alugada'), ('manutencao');
+INSERT INTO spaceship_status (name) VALUES ('disponivel'), ('alugada'), ('manutencao'), ('desativada');
 INSERT INTO rental_status (name) VALUES ('ativa'), ('concluida'), ('cancelada');
 INSERT INTO roles (name) VALUES ('admin'), ('cliente');
 INSERT INTO payment_status (name) VALUES ('pendente'), ('pago'), ('cancelado');
 INSERT INTO payment_methods (name) VALUES ('credito'), ('debito'), ('pix');
+
+-- ===== Utilizador Administrador Padrão =====
+-- Senha: Admin@123  (hash BCrypt cost-10)
+INSERT INTO users (name, email, cpf, password_hash, role_id, active)
+VALUES (
+    'Administrador',
+    'admin@star-rental.com',
+    '00000000000',
+    '$2b$10$gJuQiatZj3xdfsLfDBP2pOq.GT9CX0wiVK.LxtxF8WH38HrTUxDBq',
+    1,
+    true
+);
